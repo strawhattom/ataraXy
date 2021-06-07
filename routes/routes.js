@@ -11,6 +11,13 @@ const port = process.env.PORT || 3000;
 
 
 app.use(cors());
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
+
 /*
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,14 +34,21 @@ app.get('/', (req, res) => {
     res.send("Node activé");
 });
 
-//app.use('/connexion',require('../routes/connexion'));
-app.use('/connexion', (req, res) => {
+//Redirige toutes les requêtes /connexion au fichier en question
+app.use('/auth',require('./auth'));
+/*
+app.use('/connexion', (req, res) => { // require('../routes/connexion)
   res.send({
     token: 'test123'
   });
 });
+*/
 
+//Redirige toutes les requêtes /questions au fichier en question
 app.use('/questions',require('../routes/questions'));
+
+//Redirige toutes les requêtes /reponses au fichier en question
+app.use('/reponses',require('../routes/reponses'));
 
 // Starting our server.
 app.listen(port, () => {

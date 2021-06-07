@@ -3,13 +3,20 @@ import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} f
 
 function Accueil(props) {
 
+    const {id,ID_GROUPE,NOM,PRENOM} = props.navigation.state.params;
+
+    console.log({NOM,PRENOM});
+
     const pressDeco = () =>{
+
+        /* Pour la version mobile
         Alert.alert(
             'Déconnexion',
             'Vous êtes sur le point de vous déconnecter',
             [
                 {
                     text:"Valider", onPress:() => {
+                        sessionStorage.removeItem('token');
                         props.navigation.navigate('Login');
                         console.log('Valider OK');
                     }
@@ -21,6 +28,10 @@ function Accueil(props) {
                 }
             ]
         );
+        */
+        //Clear la sessionStorage pour le token
+        sessionStorage.removeItem('token');
+        props.navigation.navigate('Login');
     }
     
     const pressQuiz = () => {
@@ -49,7 +60,10 @@ function Accueil(props) {
         
         <View style={[styles.containerText,styles.width]}>
             <Text style={styles.bienvenue}>
-                {"Bienvenue, nom utilisateur"}
+                {"Salut, " + PRENOM}
+            </Text>
+            <Text style={styles.bienvenueDesc}>
+                {"Bienvenue sur l'application d'ataraXy"}
             </Text>
         </View>
         <View style={[styles.containerButton,styles.width]}>
@@ -133,6 +147,10 @@ const styles = StyleSheet.create({
         textAlign:"center",
         fontSize:32,
         fontWeight:'bold',
+    },
+    bienvenueDesc:{
+        textAlign:"center",
+        fontSize:16,
     },
     button:{
         margin:7,

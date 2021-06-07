@@ -7,11 +7,9 @@ import Quiz from "../app/screens/Quiz";
 
 //pile des screens
 const screens = {
-    /*
     Login:{
         screen: Login,
     },
-    */
     Accueil:{
         screen:Accueil,
     },
