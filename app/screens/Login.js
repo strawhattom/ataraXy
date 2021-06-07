@@ -1,77 +1,50 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
+import jwt_decode from "jwt-decode";
 
-async function loginUser(credentials) {
-    return fetch('http://192.168.1.11:3000/connexion', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(credentials)
-    })
-        .then(data => {
-            console.log(data);
-            props.navigation.navigate('Accueil');
-            data.json();
-        })
-        .then(json => console.log(json))
-        .catch(err => console.log("Erreur : " + err))
-};
-
-
-function Login({setToken,props}) {
+function Login(props) {
     
     const [id,onChangeId] = React.useState();
     const [pw,onChangePw] = React.useState();
-    
-    var error = false ? "Message d'erreur" : '';
+    const [isLoading,setLoading] = React.useState(false);
+    var [error,setError] = React.useState('');
 
-    
-    /*
     const pressLogin = async () => {
         setLoading(true);
         setTimeout(() => {setLoading(false)}, 3000);
         //http://127.0.0.1/php/WATARAXY/PHP/Mobile_user_login.php
         //http://localhost:3000/users
         
-        fetch('http://192.168.1.11:3000/connexion',{
+        fetch('http://192.168.1.11:3000/auth',{
             method:'POST',
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                login:id,
-                pw:pw,
+                id,
+                pw,
             })
         }).then((response) => response.json())
             .then((responseJSON) => {
-                if (responseJSON.msg == true){
+                if (responseJSON !== false){
+                    var decoded = jwt_decode(responseJSON)
                     if (!isLoading){
-                        props.navigation.navigate('Accueil');
-                        console.log("Connexion");
+                        sessionStorage.setItem('token',responseJSON);
+                        props.navigation.navigate('Accueil',decoded);
                     }
                 } else {
-                    error = responseJSON.msg;
-                    console.log("Une erreur est survenue");
+                    setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
                 }
             }).catch((error)=>{
                 console.log("Erreur : "+ error);
         });
 
     };
-    */
-
-    const handleSubmit = async () => {
-        const token = await loginUser({
-            id,
-            pw
-        });
-        setToken(token);
-      }
     
-    /*
+
+
     if(isLoading){
         
         //Timer après 1s, l'appli se charge
@@ -83,7 +56,6 @@ function Login({setToken,props}) {
         color="#000000" />);
 
     } else {
-        */
         return (
             <View style={styles.container}>
                 
@@ -97,14 +69,14 @@ function Login({setToken,props}) {
                 
                 <View style={styles.containerError}>
                     
-                    <Text style={styles.error}>{error}</Text>
+                    <Text style={[styles.error,styles.width]}>{error}</Text>
                 </View>
                 <View style={[styles.containerInput,styles.width]}>
                     <TextInput 
                     style={styles.input}
                     onChangeText={onChangeId}
                     value={id}
-                    placeholder={"Identifiant ou e-mail"}
+                    placeholder={"Identifiant"}
                     placeholderTextColor={"lightgray"}
                     />
         
@@ -130,7 +102,7 @@ function Login({setToken,props}) {
                 </View>
                 <View style={[styles.containerButton,styles.width]}>
                 <TouchableOpacity 
-                    onPress={handleSubmit}>
+                    onPress={pressLogin}>
                         <View style={[styles.button,styles.login]} > 
                             <Text>
                                 {"S'identifier"}
@@ -143,7 +115,7 @@ function Login({setToken,props}) {
     }
 
     
-//};
+};
 
 Login.protoTypes = {
     setToken:PropTypes.func.isRequired

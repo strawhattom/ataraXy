@@ -4,8 +4,13 @@ import QuizText from "./QuizText";
 
 function Quiz(props) {
 
-    const blagues =     ["La réponse universelle est 42.",
-                        "Tu savais que j'adore les haribos ?",]
+    const blagues = [
+                        "La réponse universelle est 42.",
+                        "Tu savais que j'adore les dragibus ?",
+                        "Un jours je serais le meilleur dresseur",
+                        "Elle est où la poulette ?",
+                        "Faut pas respirer la compote ; ça fait tousser !",
+                    ]
     
 
     //Lors de l'appuie, revien à la page Accueil

@@ -1,9 +1,13 @@
 import React from 'react';
 import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
+import jwt_decode from "jwt-decode";
 
 function Accueil(props) {
 
+    const {id,ID_GROUPE,NOM,PRENOM} = props.navigation.state.params;
+
     const pressDeco = () =>{
+        /*
         Alert.alert(
             'Déconnexion',
             'Vous êtes sur le point de vous déconnecter',
@@ -11,6 +15,7 @@ function Accueil(props) {
                 {
                     text:"Valider", onPress:() => {
                         props.navigation.navigate('Login');
+                        sessionStorage.removeItem('token');
                         console.log('Valider OK');
                     }
                     
@@ -21,6 +26,9 @@ function Accueil(props) {
                 }
             ]
         );
+        */
+        props.navigation.navigate('Login');
+        sessionStorage.removeItem('token');
     }
     
     const pressQuiz = () => {
@@ -49,7 +57,10 @@ function Accueil(props) {
         
         <View style={[styles.containerText,styles.width]}>
             <Text style={styles.bienvenue}>
-                {"Bienvenue, nom utilisateur"}
+                {"Salut, " + PRENOM}
+            </Text>
+            <Text style={styles.bienvenueDesc}>
+                {"Bienvenue sur l'application ataraXy"}
             </Text>
         </View>
         <View style={[styles.containerButton,styles.width]}>
@@ -133,6 +144,10 @@ const styles = StyleSheet.create({
         textAlign:"center",
         fontSize:32,
         fontWeight:'bold',
+    },
+    bienvenueDesc:{
+        textAlign:"center",
+        fontSize:16,
     },
     button:{
         margin:7,
