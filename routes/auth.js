@@ -38,7 +38,7 @@ router.post('/', (req,res) => {
                 //Crée le token avec les informations de l'utilisateurs
                 //pour la session qui expire au bout de 15 minutes
                 //de la forme (s'il est décodé):
-                //{id:id users,ID_GROUPE:idDuGroupe,NOM:nom,PRENOM:prenom}
+                //{id:idUsers,ID_GROUPE:idDuGroupe,NOM:nom,PRENOM:prenom}
                 const token = jwt.sign(response.dataValues,
                 'supersecret'
                 ,

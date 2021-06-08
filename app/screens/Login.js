@@ -2,13 +2,15 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
 import jwt_decode from "jwt-decode";
+import {AuthContext} from "../components/context";
 
 function Login(props) {
     
-    const [id,onChangeId] = React.useState();
-    const [pw,onChangePw] = React.useState();
+    const [id,onChangeId] = React.useState('');
+    const [pw,onChangePw] = React.useState('');
     const [isLoading,setLoading] = React.useState(false);
     var [error,setError] = React.useState('');
+    const { signIn } = React.useContext(AuthContext);
 
     const pressLogin = async () => {
         setLoading(true);
@@ -78,6 +80,7 @@ function Login(props) {
                     value={id}
                     placeholder={"Identifiant"}
                     placeholderTextColor={"lightgray"}
+                    clearButtonMode='always'
                     />
         
                     <TextInput
@@ -88,21 +91,13 @@ function Login(props) {
                     placeholderTextColor={"lightgray"}
                     secureTextEntry={true}
                     maxLength={32}
+                    clearButtonMode='always'
                     />
-                    <View style={
-                        {   
-                            marginRight:20,
-                            alignItems:'flex-end',
-                        }
-                    }>
-                        <Text style={styles.forgot}>
-                            {"Mot de passe oublié ?"}
-                        </Text>
-                    </View>
+
                 </View>
                 <View style={[styles.containerButton,styles.width]}>
                 <TouchableOpacity 
-                    onPress={pressLogin}>
+                    onPress={() => signIn({id,pw})}>
                         <View style={[styles.button,styles.login]} > 
                             <Text>
                                 {"S'identifier"}
@@ -164,6 +159,8 @@ const styles = StyleSheet.create({
         backgroundColor:"#beeaff",
     },
     error:{
+        fontWeight:'bold',
+        textAlign:'center',
         color:'red',
     },
     input:{

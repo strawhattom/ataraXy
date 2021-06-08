@@ -7,7 +7,7 @@ function Quiz(props) {
     const blagues = [
                         "La réponse universelle est 42.",
                         "Tu savais que j'adore les dragibus ?",
-                        "Un jours je serais le meilleur dresseur",
+                        "Un jours je serais le meilleur dresseur !",
                         "Elle est où la poulette ?",
                         "Faut pas respirer la compote ; ça fait tousser !",
                     ]
@@ -57,7 +57,7 @@ function Quiz(props) {
                 {"En attente de lancement..."}
             </Text>
             <Text style={styles.wait}>
-                {blagues[1]}
+                {blagues[Math.floor(Math.random()*(blagues.length-1))]}
             </Text>
         </View>
         <TouchableOpacity style={styles.btnRetour} onPress={pressRetour}>

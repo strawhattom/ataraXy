@@ -10,7 +10,7 @@ router.get('/', (req, res) =>
         .then(questions => {
             res.send(questions);
         })
-        .catch(err => console.log("Erreur login : " + err))
+        .catch(err => console.log("Erreur questions : " + err))
 );
 
 

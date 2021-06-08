@@ -26,10 +26,14 @@ app.get('/', (req, res) => {
     res.send("Node activé");
 });
 
+//Route vers l'authentification
 app.use('/auth',require('./auth'));
 
+//Route vers le quiz
+app.use('/quiz',require('./quiz'));
 
-app.use('/questions',require('../routes/questions'));
+//Route vers les questions
+app.use('/questions',require('./questions'));
 
 // Starting our server.
 app.listen(port, () => {

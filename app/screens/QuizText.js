@@ -6,7 +6,6 @@ import ProgressBar from 'react-native-progress/Bar';
 
 function QuizText(props) {
 
-    
     return (
     <SafeAreaView style={styles.container}>
         {/* Logo dans le coin */}

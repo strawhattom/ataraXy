@@ -2,78 +2,158 @@ import React,{useState} from 'react';
 import 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import * as SecureStore from 'expo-secure-store';
 
-import Navigator from "./routes/homeStack";
+//import Navigator from "./routes/homeStack";
 import Login from "./app/screens/Login";
 import Accueil from "./app/screens/Accueil";
 import Test from "./app/screens/Test";
 import Quiz from "./app/screens/Quiz";
-
-//const Stack = createStackNavigator();
-
-/*
-function setToken(userToken){
-  sessionStorage.setItem('token', JSON.stringify(userToken));
-}
-*/
-function getToken(){
-  const tokenString = sessionStorage.getItem('token');
-  const userToken = JSON.parse(tokenString);
-  return userToken?.token
-}
+import QuizText from "./app/screens/QuizText";
+import {AuthContext} from "./app/components/context";
 
 
-export default function App() {
+const Stack = createStackNavigator();
 
-    /*
-    const token = getToken();
-    
-    if (!token){
-      return(<NavigationContainer>
-        <Stack.Navigator>
-        <Stack.Screen
-            name="Login"
-            component={Login}
-          />
-          <Stack.Screen
-            name="Accueil"
-            component={Accueil}
-          />
-          <Stack.Screen
-            name="Test"
-            component={Test}
-          />
-          <Stack.Screen
-            name="Quiz"
-            component={Quiz}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>)
+
+export default function App({navigation}) {
+
+  const [state, dispatch] = React.useReducer(
+    (prevState, action) => {
+      switch (action.type) {
+        case 'RESTORE_TOKEN':
+          return {
+            ...prevState,
+            userToken: action.token,
+            isLoading: false,
+          };
+        case 'SIGN_IN':
+          console.log("Connexion");
+          return {
+            ...prevState,
+            isSignout: false,
+            userToken: action.token,
+          };
+        case 'SIGN_OUT':
+          console.log("Deconnexion");
+          sessionStorage.removeItem('token');
+          return {
+            ...prevState,
+            isSignout: true,
+            userToken: null,
+          };
+      }
+    },
+    {
+      isLoading: true,
+      isSignout: false,
+      userToken: null,
     }
-    */
-    return (
-      <Navigator/>
-      /*
-      <NavigationContainer>
-          <Stack.Navigator>
-          <Stack.Screen
-              name="Login"
-              component={Login}
-            />
-            <Stack.Screen
-              name="Accueil"
-              component={Accueil}
-            />
-            <Stack.Screen
-              name="Test"
-              component={Test}
-            />
-            <Stack.Screen
-              name="Quiz"
-              component={Quiz}
-            />
+  );
+
+  React.useEffect(() => {
+    // Fetch the token from storage then navigate to our appropriate place
+    const bootstrapAsync = () => {
+      let userToken;
+
+      try {
+        userToken = sessionStorage.getItem('userToken');
+      } catch (e) {
+        // Restoring token failed
+        console.log("Token restoring failed : " + e);
+      }
+
+      // After restoring token, we may need to validate it in production apps
+
+      // This will switch to the App screen or Auth screen and this loading
+      // screen will be unmounted and thrown away.
+      dispatch({ type: 'RESTORE_TOKEN', token: userToken });
+    };
+
+    bootstrapAsync();
+  }, []);
+
+  const authContext = React.useMemo(
+    () => ({
+      signIn: async ({id,pw}) => {
+        // In a production app, we need to send some data (usually username, password) to server and get a token
+        // We will also need to handle errors if sign in failed
+        // After getting token, we need to persist the token using `SecureStore`
+        // In the example, we'll use a dummy token
+
+        fetch('http://192.168.1.11:3000/auth',{
+            method:'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id,
+                pw,
+            })
+        }).then((response) => response.json())
+            .then((responseJSON) => {
+                if (responseJSON !== false){
+                  sessionStorage.setItem('token',responseJSON);
+                  dispatch({ type: 'SIGN_IN', token: responseJSON });
+                } else {
+                  setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
+                }
+            }).catch((error)=>{
+                console.log("Erreur : "+ error);
+        });
+
+        
+      },
+      signOut: () => dispatch({ type: 'SIGN_OUT' }),
+    }),
+    []
+  );
+  
+  return(
+    <>
+      <AuthContext.Provider value={authContext}>
+        <NavigationContainer>
+          <Stack.Navigator
+            screenOptions={{
+            headerShown: false
+          }}>
+            {state.userToken == null ? (
+              <Stack.Screen
+                name="Login"
+                component={Login}
+                options={{
+                  title: 'Sign in',
+                  // When logging out, a pop animation feels intuitive
+                  // You can remove this if you want the default 'push' animation
+                  animationTypeForReplace: state.isSignout ? 'pop' : 'push',
+                }}
+              />
+            ) : (
+              <>
+                <Stack.Screen
+                  name="Accueil"
+                  component={Accueil}
+                />
+                <Stack.Screen
+                  name="Test"
+                  component={Test}
+                />
+                <Stack.Screen
+                  name="Quiz"
+                  component={Quiz}
+                />
+                <Stack.Screen
+                  name="QuizText"
+                  component={QuizText}
+                />
+              </>
+            )}
+            
+              
           </Stack.Navigator>
         </NavigationContainer>
-      */
-    );
+      </AuthContext.Provider>
+    </>
+    )
 };

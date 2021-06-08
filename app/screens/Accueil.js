@@ -1,10 +1,17 @@
 import React from 'react';
 import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
+import {AuthContext} from "../components/context";
 import jwt_decode from "jwt-decode";
 
 function Accueil(props) {
 
-    const {id,ID_GROUPE,NOM,PRENOM} = props.navigation.state.params;
+    const { signOut } = React.useContext(AuthContext);
+
+    const decoded = jwt_decode(sessionStorage.getItem('token'));
+    
+    const {id,ID_GROUPE,NOM,PRENOM} = decoded;
+
+    const {qActif,setActif} = React.useState(false);
 
     const pressDeco = () =>{
         /*
@@ -32,7 +39,35 @@ function Accueil(props) {
     }
     
     const pressQuiz = () => {
-        props.navigation.navigate('Quiz');
+        fetch('http://192.168.1.11:3000/quiz?idg='+ID_GROUPE,{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json())
+            .then((responseJSON) => {
+
+                console.log(responseJSON);
+                if (responseJSON !== false){
+                    //Si on a une réponse mais qu'on a pas de résultat
+                    if (responseJSON.length === 0){
+
+                    } else {
+                        responseJSON.sort(function(a,b) {
+                            return new Date(b.date) - new Date(a.date);
+                        })
+                        console.log(responseJSON);
+                        props.navigation.navigate('Quiz');
+                    }
+                } else {
+                    console.log("Retourne false via le serveur");
+                }
+            }).catch((error)=>{
+                console.log("Erreur : "+ error);
+        });
+        
+
         console.log("Rentre dans le quiz");
     }
 
@@ -45,69 +80,133 @@ function Accueil(props) {
         props.navigation.navigate('Test');
     }
     */
-    return (
-    <SafeAreaView style={styles.container}>
-        <View style={styles.containerLogo}>
-            <Image 
-            fadeDuration={1500}
-            style={styles.tinylogo}
-            source={require('../assets/icon.png')
-            }/>
-        </View>
+
+    if (id == 19){
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.containerLogo}>
+                    <Image 
+                    fadeDuration={1500}
+                    style={styles.tinylogo}
+                    source={require('../assets/icon.png')
+                    }/>
+                </View>
+                
+                <View style={[styles.containerText,styles.width]}>
+                    <Text style={styles.bienvenue}>
+                        {"Salut, " + PRENOM}
+                    </Text>
+                    <Text style={styles.bienvenueDesc}>
+                        {"Bienvenue sur l'application ataraXy"}
+                    </Text>
+                </View>
+                <View style={[styles.containerButton,styles.width]}>
         
-        <View style={[styles.containerText,styles.width]}>
-            <Text style={styles.bienvenue}>
-                {"Salut, " + PRENOM}
-            </Text>
-            <Text style={styles.bienvenueDesc}>
-                {"Bienvenue sur l'application ataraXy"}
-            </Text>
-        </View>
-        <View style={[styles.containerButton,styles.width]}>
-            <TouchableOpacity /*onPress={pressGestion}*/>
-                <View style={styles.button} > 
-                    <Text>
-                        {"Gestion des QCM"}
+                    
+                    <TouchableOpacity /*onPress={pressGestion}*/>
+                        <View style={styles.button} > 
+                            <Text>
+                                {"Gestion des blagues"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity onPress={pressQuiz}>
+                        <View style={[styles.button,styles.quizz]} > 
+                            <Text>
+                                {"Mode quiz"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <View style={[styles.button,styles.faireqcm]} > 
+                            <Text>
+                                {"Faire vos QCM"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity  onPress={() => {props.navigation.navigate('QuizText')}}>
+                        <View 
+                        style={[styles.button,styles.cours]} > 
+                            <Text>
+                                {"Accéder aux cours"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+                <View style={[styles.containerDeco,styles.width]}>
+                    <TouchableOpacity onPress={signOut}>
+                        <View 
+                        style={[styles.button,styles.deconnexion]} 
+                        > 
+                            <Text>
+                                {"Déconnexion"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+            </SafeAreaView>
+            );
+    } else {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.containerLogo}>
+                    <Image 
+                    fadeDuration={1500}
+                    style={styles.tinylogo}
+                    source={require('../assets/icon.png')
+                    }/>
+                </View>
+                
+                <View style={[styles.containerText,styles.width]}>
+                    <Text style={styles.bienvenue}>
+                        {"Salut, " + PRENOM}
+                    </Text>
+                    <Text style={styles.bienvenueDesc}>
+                        {"Bienvenue sur l'application ataraXy"}
                     </Text>
                 </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={pressQuiz}>
-                <View style={[styles.button,styles.quizz]} > 
-                    <Text>
-                        {"Mode quiz"}
-                    </Text>
+                <View style={[styles.containerButton,styles.width]}>
+                    
+                    <TouchableOpacity onPress={pressQuiz}>
+                        <View style={[styles.button,styles.quizz]} > 
+                            <Text>
+                                {"Mode quiz"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity>
+                        <View style={[styles.button,styles.faireqcm]} > 
+                            <Text>
+                                {"Faire vos QCM"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity>
+                        <View 
+                        style={[styles.button,styles.cours]} > 
+                            <Text>
+                                {"Accéder aux cours"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <View style={[styles.button,styles.faireqcm]} > 
-                    <Text>
-                        {"Faire vos QCM"}
-                    </Text>
+                <View style={[styles.containerDeco,styles.width]}>
+                    <TouchableOpacity onPress={signOut}>
+                        <View 
+                        style={[styles.button,styles.deconnexion]} 
+                        > 
+                            <Text>
+                                {"Déconnexion"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
                 </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity>
-                <View 
-                style={[styles.button,styles.cours]} > 
-                    <Text>
-                        {"Accéder aux cours"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        </View>
-        <View style={[styles.containerDeco,styles.width]}>
-            <TouchableOpacity onPress={pressDeco}>
-                <View 
-                style={[styles.button,styles.deconnexion]} 
-                > 
-                    <Text>
-                        {"Déconnexion"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        </View>
-    </SafeAreaView>
-    );
+            </SafeAreaView>
+            );
+    }
 };
 
 const styles = StyleSheet.create({
