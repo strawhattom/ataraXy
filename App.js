@@ -12,7 +12,6 @@ import Quiz from "./app/screens/Quiz";
 import QuizText from "./app/screens/QuizText";
 import {AuthContext} from "./app/components/context";
 
-
 const Stack = createStackNavigator();
 
 
@@ -53,11 +52,12 @@ export default function App({navigation}) {
 
   React.useEffect(() => {
     // Fetch the token from storage then navigate to our appropriate place
-    const bootstrapAsync = () => {
+    const bootstrapAsync = async () => {
       let userToken;
 
       try {
-        userToken = sessionStorage.getItem('userToken');
+        //userToken = await SecureStore.getItemAsync('token');
+        userToken = sessionStorage.getItem('token');
       } catch (e) {
         // Restoring token failed
         console.log("Token restoring failed : " + e);
@@ -79,7 +79,6 @@ export default function App({navigation}) {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `SecureStore`
-        // In the example, we'll use a dummy token
 
         fetch('http://192.168.1.11:3000/auth',{
             method:'POST',
@@ -94,10 +93,13 @@ export default function App({navigation}) {
         }).then((response) => response.json())
             .then((responseJSON) => {
                 if (responseJSON !== false){
-                  sessionStorage.setItem('token',responseJSON);
+                  //SecureStore.setItemAsync('token',responseJSON)
+                  //.catch(err => console.log("Error storing token : " + err));
+                  sessionStorage.setItem('token',responseJSON)
                   dispatch({ type: 'SIGN_IN', token: responseJSON });
                 } else {
-                  setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
+                  //setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
+                  console.log("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
                 }
             }).catch((error)=>{
                 console.log("Erreur : "+ error);

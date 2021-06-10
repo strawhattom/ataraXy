@@ -6,6 +6,7 @@ const Users = require('../models/Users');
 
 //Bibliothèque pour la gestion de token
 const jwt = require('jsonwebtoken');
+
 //Bibliothèque de cryptologie
 const crypto = require('crypto');
 

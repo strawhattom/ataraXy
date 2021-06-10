@@ -2,13 +2,27 @@ import React from 'react';
 import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
 import {AuthContext} from "../components/context";
 import jwt_decode from "jwt-decode";
+import * as SecureStore from 'expo-secure-store';
+
 
 function Accueil(props) {
 
     const { signOut } = React.useContext(AuthContext);
 
-    const decoded = jwt_decode(sessionStorage.getItem('token'));
     
+    var decoded ;
+    /*
+    const token = async () => await SecureStore.getItemAsync('token');
+    
+    if (token){
+        decoded = jwt_decode(token);
+        
+    }
+    */
+    const token = sessionStorage.getItem('token');
+    if (token){
+        decoded = jwt_decode(token);
+    }
     const {id,ID_GROUPE,NOM,PRENOM} = decoded;
 
     const {qActif,setActif} = React.useState(false);
@@ -35,11 +49,12 @@ function Accueil(props) {
         );
         */
         props.navigation.navigate('Login');
-        sessionStorage.removeItem('token');
+        //SecureStore.deleteItemAsync('token');
+        sessionStorage.remoevItem('token');
     }
     
     const pressQuiz = () => {
-        fetch('http://192.168.1.11:3000/quiz?idg='+ID_GROUPE,{
+        fetch('http://192.168.1.11:3000/quiz/'+ID_GROUPE,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -52,13 +67,14 @@ function Accueil(props) {
                 if (responseJSON !== false){
                     //Si on a une réponse mais qu'on a pas de résultat
                     if (responseJSON.length === 0){
-
+                        console.log("Pas de quiz disponible, on ne fait rien");
+                        return;
                     } else {
+                        //Trie les quiz du plus récent jusqu'au plus vieux
                         responseJSON.sort(function(a,b) {
                             return new Date(b.date) - new Date(a.date);
                         })
-                        console.log(responseJSON);
-                        props.navigation.navigate('Quiz');
+                        props.navigation.navigate('Quiz',responseJSON[0]); //Prend le quiz le plus récent
                     }
                 } else {
                     console.log("Retourne false via le serveur");
@@ -68,7 +84,39 @@ function Accueil(props) {
         });
         
 
-        console.log("Rentre dans le quiz");
+        console.log("Veut rentrer dans le quiz");
+    }
+
+    //Gestion d'appuie sur "Accéder aux cours"
+    const pressQuizText = () => {
+        fetch('http://192.168.1.11:3000/quiz/'+ID_GROUPE,{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json())
+            .then((responseJSON) => {
+
+                if (responseJSON !== false){
+                    //Si on a une réponse mais qu'on a pas de résultat
+                    if (responseJSON.length === 0){
+                        console.log("Pas de quiz disponible, on ne fait rien");
+                        return;
+                    } else {
+                        //Trie les quiz du plus récent jusqu'au plus vieux
+                        responseJSON.sort(function(a,b) {
+                            return new Date(b.date) - new Date(a.date);
+                        })
+                        props.navigation.navigate('QuizText',responseJSON[0]); //Prend le quiz le plus récent
+                    }
+                } else {
+                    console.log("Retourne false via le serveur");
+                }
+            }).catch((error)=>{
+                console.log("Erreur : "+ error);
+        });
+        
     }
 
     /*
@@ -81,6 +129,7 @@ function Accueil(props) {
     }
     */
 
+    //Si c'est M. Hébert
     if (id == 19){
         return (
             <SafeAreaView style={styles.container}>
@@ -94,7 +143,9 @@ function Accueil(props) {
                 
                 <View style={[styles.containerText,styles.width]}>
                     <Text style={styles.bienvenue}>
-                        {"Salut, " + PRENOM}
+                        {
+                        "Salut, " + PRENOM
+                        }
                     </Text>
                     <Text style={styles.bienvenueDesc}>
                         {"Bienvenue sur l'application ataraXy"}
@@ -126,7 +177,7 @@ function Accueil(props) {
                         </View>
                     </TouchableOpacity>
                     
-                    <TouchableOpacity  onPress={() => {props.navigation.navigate('QuizText')}}>
+                    <TouchableOpacity  onPress={pressQuizText}>
                         <View 
                         style={[styles.button,styles.cours]} > 
                             <Text>
@@ -184,7 +235,7 @@ function Accueil(props) {
                         </View>
                     </TouchableOpacity>
                     
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={pressQuizText}>
                         <View 
                         style={[styles.button,styles.cours]} > 
                             <Text>

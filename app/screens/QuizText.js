@@ -3,29 +3,127 @@ import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} f
 import Animated from 'react-native-reanimated';
 import ProgressBar from 'react-native-progress/Bar';
 
+const recup_reponse = (chaine) => {
+    var tempReponses = chaine.split('\n');
+    tempReponses.pop();
+    console.log(tempReponses);
+    return tempReponses;
+}
+
+const atar = (qcm) => {
+    fetch('http://127.0.0.1/php/WATARAXY/PHP/Adm_gestion_quiz_action.php?action=atar-qst&qcm='+qcm,{
+        method:'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    }).then(response => response.json)
+    .then(responseJSON => {
+        console.log(responseJSON);
+        //On a reçu une réponse positive
+        if (responseJSON.message == true){
+            let tempReponses = [];
+            setQuestion(responseJSON.question);
+            for (let i = 0;i<responseJSON.length;i++){
+                tempReponses.push(responseJSON[i]['tex']);
+            }
+            setReponses(tempReponses);
+        }
+    }).catch(err => console.log("Erreur obtention reponse : " + err))
+}
 
 function QuizText(props) {
+
+    const [points,setPoint] = React.useState(0);
+    const [temps,setTemps] = React.useState(10);
+    const [question,setQuestion] = React.useState("Question par défaut");
+    const [idquestion,setIdQuestion] = React.useState(1);
+    const [reponses,setReponses] = React.useState(['Juste','Mauvaise 1','Mauvaise 2','Mauvaise 3']);
+    const [reponses_binaire,setReponsesBinaire] = React.useState('10');
+
+    var btnReponses = [];
+
+    for (let i = 0;i<reponses.length;i++){
+        btnReponses.push(
+            <TouchableOpacity /*onPress={pressGestion}*/>
+                <View style={[styles.button,styles.quiz]} > 
+                    <Text>
+                        {reponses[i]}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        )
+    }
+    const {DATE_QUIZ,ID_GROUPE,ID_QUIZ,NOTE} = props.route.params
+
+    //console.log("Date : " + DATE_QUIZ + '\n'+ "ID Groupe : " + ID_GROUPE + '\n'+ "ID Quiz : " + ID_QUIZ + '\n'+ "Noté : " + NOTE + '\n');
+
+    
+    //Par défaut on choisit la première question
+    const update = () => fetch('http://192.168.1.11:3000/questions/'+ID_QUIZ+'/1',{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json())
+            .then((responseJSON) => {
+
+                if (responseJSON !== false){
+                    //Si on a une réponse mais qu'on a pas de résultat
+                    if (responseJSON.length === 0){
+                        return;
+                    } else {
+                        
+                        const question = responseJSON[0];
+                        setPoint(question.POINTS);
+                        setTemps(question.TEMPS);
+                        setIdQuestion(question.ID_QUESTION);
+
+                        if (question.TYPE != 'Ataraxienne'){
+                            setQuestion(question.QUESTION);
+                            console.log(question.REPONSES)
+                            const reponses = recup_reponse(question.REPONSES);
+                            setReponses(reponses);
+                        } else {
+                            atar(question.QUESTION);
+                        }
+                        setReponsesBinaire(question.REPONSES_BINAIRE);
+                    }
+                } else {
+                    console.log("Retourne false via le serveur");
+                }
+            }).catch((error)=>{
+                console.log("Erreur : "+ error);
+        });
+
+    update();
+    //const intervalUpdate = setInterval(update,5000);
+
+    
 
     return (
     <SafeAreaView style={styles.container}>
         {/* Logo dans le coin */}
-        <View style={styles.containerLogo}>
-            <Image 
-            fadeDuration={1500}
-            style={styles.tinylogo}
-            source={require('../assets/icon.png')
-            }/>
-        </View>
+        <TouchableOpacity 
+            style={styles.containerLogo} 
+            onPress={() => {props.navigation.navigate('Accueil')}}>
+                <Image 
+                fadeDuration={1500}
+                style={styles.tinylogo}
+                source={require('../assets/icon.png')
+                }/>
+        </TouchableOpacity>
         {/* Nombre de points*/}
         <View style={[styles.containerPoints,styles.width]}>
             <Text style={styles.numeroQuestion}>
-                {"23"}
+                {points}
             </Text>
         </View>
         {/* Numéro question et barre de progression */}
         <View style={[styles.containerQuestion,styles.width]}>
             <Text style={styles.numeroQuestion}>
-                {"Question 1/8"}
+                {"Question " + idquestion + "/" + reponses.length}
             </Text>
             <View style={styles.progressBar}>
                 <ProgressBar progress={0.3} width={300} height={7} color={"salmon"} animated/>
@@ -34,41 +132,12 @@ function QuizText(props) {
         {/* Contenu de la question */}
         <View style={styles.containerContenu}>
             <Text style={styles.question}>
-                {"Quelle est la réponse universelle ?"}
+                {question}
             </Text>
         </View>
         {/* Réponses */}
         <View style={[styles.containerReponses,styles.widthBtn]}>
-            <TouchableOpacity /*onPress={pressGestion}*/>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse A"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse B"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse C"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity>
-                <View 
-                style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse D"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
+            {btnReponses}
         </View>
 
     </SafeAreaView>
@@ -87,25 +156,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"13%",
+        height:"8%",
     },
     containerPoints:{
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"7%",
+        height:"auto",
     },
     containerQuestion:{
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"15%",
+        height:"10%",
     },
     containerContenu:{
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"15%",
+        height:"8%",
     },
     containerReponses:{
         margin:10,
