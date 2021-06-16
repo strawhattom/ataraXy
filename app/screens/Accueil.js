@@ -302,20 +302,19 @@ const styles = StyleSheet.create({
     button:{
         margin:7,
         height:40,
-        backgroundColor:"lightgray",
-        color:"black",
+        backgroundColor:'lightgray',
         borderRadius:40,
         alignItems: 'center',
         justifyContent: 'center',
     },
     quizz:{
-        backgroundColor:"#beeaff",
+        backgroundColor:"#a097ff",
     },
     faireqcm:{
         backgroundColor:"#ffa2c9",
     },
     cours:{
-        backgroundColor:"#fffbef",
+        backgroundColor:"#a097ff",
     },
     deconnexion:{
         backgroundColor:"salmon",

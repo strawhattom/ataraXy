@@ -25,8 +25,7 @@ router.get('/:groupe', (req, res) => {
             ID_GROUPE:idgroupe,
             ENCOURS:true,
         }
-    })
-        .then(quiz => {
+    }).then(quiz => {
             if (quiz == null){
                 res.send(false);
             } else {
@@ -36,6 +35,23 @@ router.get('/:groupe', (req, res) => {
         })
         .catch(err => console.log("Erreur quiz: " + err))
 });
+
+router.get('/:quiz/etat', (req,res) => {
+    const idquiz = req.params.quiz;
+    Quiz.findOne({
+        where:{
+            ID_QUIZ:idquiz,
+            ENCOURS:true,
+        }
+    }).then(quiz => {
+        if (quiz == null){
+            res.send(false);
+        } else {
+            //On a un résultat
+            res.send(quiz);    
+        }
+    })
+})
 
 
 

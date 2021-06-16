@@ -1,29 +1,36 @@
 import React from 'react';
-import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
-import Animated from 'react-native-reanimated';
-import ProgressBar from 'react-native-progress/Bar';
-import {MathJaxSvg} from 'react-native-mathjax-html-to-svg';
+import {ActivityIndicator, StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
+import {ProgressBar} from 'react-native-paper';
+//import Katex from 'react-native-katex';
 
 function QuizText(props) {
+
+    console.log("Loading quiz text");
 
     const [points,setPoint] = React.useState(2);
     const [temps,setTemps] = React.useState(10);
     const [question,setQuestion] = React.useState("Question par défaut");
-    const [type,setType] = React.useState("Texte");
-    const [idquestion,setIdQuestion] = React.useState(1);
+    const [typeQuestion,setTypeQuestion] = React.useState("Texte");
+    const [idquestion,setIdQuestion] = React.useState(0);
     const [reponses,setReponses] = React.useState(['Juste','Mauvaise 1','Mauvaise 2','Mauvaise 3']);
     const [reponses_binaire,setReponsesBinaire] = React.useState('1000');
-    const LaTeX = 'We give illustrations for the three processes $e^+e^-$, gluon-gluon and $\\gamma\\gamma \\to W t\\bar b$.'
     const [img,setImgSrc] = React.useState('');
+    const [progress,setProgress] = React.useState(0);
+    const [timer,setTimer] = React.useState(10);
+    const [isLoading, setLoading] = React.useState(true);
+    const [expression, setExpression] = React.useState("We give illustrations for the three processes $e^+e^-$, gluon-gluon and $\\gamma\\gamma \\to W t\\bar b$.");
 
     const [nbQuestion,setNbQuestion] = React.useState(1);
 
     var btnReponses = [];
 
+    //Créer les boutons en fonctions du nombre de réponses et les stockes dans le tableau btnReponses
     for (let i = 0;i<reponses.length;i++){
         btnReponses.push(
             <TouchableOpacity 
-            key={i+1}
+            key={i}
+            val={reponses_binaire[i]}
+            selected={false}
             /*onPress={pressGestion}*/>
                 <View style={[styles.button,styles.quiz]} > 
                     <Text>
@@ -37,6 +44,7 @@ function QuizText(props) {
 
     //console.log("Date : " + DATE_QUIZ + '\n'+ "ID Groupe : " + ID_GROUPE + '\n'+ "ID Quiz : " + ID_QUIZ + '\n'+ "Noté : " + NOTE + '\n');
 
+    //Obtient les réponses dans un tableau en séparant la chaîne à chaque \n
     const recup_reponse = (chaine) => {
         var tempReponses = chaine.split("\\n");
         tempReponses.pop();
@@ -44,6 +52,7 @@ function QuizText(props) {
     }
     
     const atar = (qcm) => {
+        //Fetch un tableau contenant : la question et les réponses en fonction du QCM.
         fetch(`http://127.0.0.1/php/WATARAXY/PHP/AutoQCMMobile.php?qcm=${qcm}`,{
             method:'GET',
             headers: {
@@ -62,7 +71,7 @@ function QuizText(props) {
                 for (let i = 0;i<reponses.length;i++){
                     tempReponses.push(reponses[i].tex);
                 }
-                setReponses(tempReponses);
+                setReponses(tempReponses);  
             } else {
                 console.log("Réponse vide du serveur");
             }
@@ -71,7 +80,7 @@ function QuizText(props) {
 
     
     //Par défaut on choisit la première question
-    const update = () => fetch('http://192.168.1.11:3000/questions/'+ID_QUIZ+'/3',{
+    const update = (id) => fetch(`http://192.168.1.11:3000/questions/${ID_QUIZ}/${id}`,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -79,8 +88,7 @@ function QuizText(props) {
             },
         }).then((response) => response.json())
             .then((responseJSON) => {
-                console.log("Update");
-                console.log(responseJSON);
+
                 if (responseJSON !== false){
                     //Si on a une réponse mais qu'on a pas de résultat
                     if (responseJSON.length === 0){
@@ -89,8 +97,9 @@ function QuizText(props) {
                         const question = responseJSON[0];
                         setPoint(question.POINTS);
                         setTemps(question.TEMPS);
+                        setTimer(question.TEMPS);
                         setIdQuestion(question.ID_QUESTION);
-                        setType(question.TYPE);
+                        setTypeQuestion(question.TYPE);
 
                         if (question.TYPE != 'Ataraxienne'){
                             setQuestion(question.QUESTION);
@@ -115,11 +124,41 @@ function QuizText(props) {
             }).catch((error)=>{
                 console.log("Erreur : "+ error);
         });
+    
+    //Fonction qui permet de savoir si il y a un changement de question à faire
+    const checkUpdate = () => {
+        fetch('http://192.168.1.11:3000/quiz/'+ID_QUIZ+'/etat',{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+        .then(responseJSON => {
+            if (responseJSON !== false){
 
+                const etat = responseJSON.ETAT_QUESTION;
+
+                if (etat != idquestion){
+                    setLoading(true);
+                    setTimeout(() => {
+                        console.log('Update');
+                        setLoading(false);
+                        setIdQuestion(etat);
+                        update(etat);
+                    },1000);
+                }
+
+            } else {
+                console.log("Retourne false via le serveur");
+            }
+        })
+    }
 
     React.useEffect(
         () => {
-            update();
+            checkUpdate();
+            const intervalUpdate = setInterval(checkUpdate,5000);
             fetch('http://192.168.1.11:3000/questions/'+ID_QUIZ,{
                 method:'GET',
                 headers: {
@@ -127,81 +166,123 @@ function QuizText(props) {
                     'Content-Type': 'application/json',
                 },
             }).then((response) => response.json())
-                .then((responseJSON) => {
+            .then((responseJSON) => {
                     setNbQuestion(responseJSON.length);
-                })
-                .catch(err => console.err(err));
+            })
+            .catch(err => console.err(err));
             
+            if (!isLoading){
+                const intervalBar = setInterval(() => {
+                    if (temps != 0) {
+                        //Baisse le compteur de temps
+                        setTimer(timer-1);
+                        //Met à jours la barre de progression
+                        setProgress(timer/temps);
+                    } else {
+                        setLoading(true);
+                        setProgress(1);
+                        clearInterval(intervalBar);
+                        return;
+                    }
+                },1000);
+            }
         }
         ,[]
     )
     //update();
-    //const intervalUpdate = setInterval(update,5000);
+    
 
-    return (
-    <SafeAreaView style={styles.container}>
-        {/* Logo dans le coin */}
-        <TouchableOpacity 
-            style={styles.containerLogo} 
-            onPress={() => {props.navigation.navigate('Accueil')}}>
-                <Image 
-                fadeDuration={1500}
-                style={styles.tinylogo}
-                source={require('../assets/icon.png')
-                }/>
-        </TouchableOpacity>
-        {/* Nombre de points*/}
-        <View style={[styles.containerPoints,styles.width]}>
-            <Text style={styles.numeroQuestion}>
-                {points}
-            </Text>
-        </View>
-        {/* Numéro question et barre de progression */}
-        <View style={[styles.containerQuestion,styles.width]}>
-            <Text style={styles.numeroQuestion}>
-                {"Question " + idquestion + "/" + nbQuestion}
-            </Text>
-            <View style={styles.progressBar}>
-                <ProgressBar progress={0.6} width={300} height={7} color={"salmon"} animated/>
-            </View>
-        </View>
-        {/* Contenu de la question */}
-        <View style={[styles.containerContenu,styles.width]}>
+    
 
-            {type != 'Ataraxienne' &&
-                <Text style={styles.question}>
-                    {question}
-                </Text>
-            }
+    if (isLoading) {
+        setTimeout(() => {
+            setLoading(false);
+        },1000);
+        return (
+            <ActivityIndicator size="large"
+            color='#ffe3c0'
+            style={
+                {
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor:"white",    
+                }
+            }/>
+        )
+    } else {
 
-            {type == 'Image' &&
-                <Image 
-                fadeDuration={1500}
-                style={styles.questionImg}
-                source={img}/>
-            }
-            
+        return (
+            <SafeAreaView style={styles.container}>
+                {/* Logo dans le coin */}
+                <TouchableOpacity 
+                    style={styles.containerLogo} 
+                    onPress={() => {props.navigation.navigate('Accueil')}}>
+                        <Image 
+                        fadeDuration={1500}
+                        style={styles.tinylogo}
+                        source={require('../assets/icon.png')
+                        }/>
+                </TouchableOpacity>
+                {/* Nombre de points*/}
+                <View style={[styles.containerPoints,styles.width]}>
+                    <Text style={styles.numeroQuestion}>
+                        {points}
+                    </Text>
+                </View>
+                {/* Numéro question et barre de progression */}
+                <View style={[styles.containerQuestion,styles.width]}>
+                    <Text style={styles.numeroQuestion}>
+                        {"Question " + idquestion + "/" + nbQuestion}
+                    </Text>
+                    <ProgressBar progress={progress}
+                        style={styles.progressBar}
+                        color={"salmon"} animated/>
+                </View>
+                {/* Contenu de la question */}
+                <View style={[styles.containerContenu,styles.width]}>
+        
+                    <Text style={styles.question}>
+                        {question}
+                    </Text>
+        
+                    {typeQuestion == 'Image' &&
+                        <Image 
+                        fadeDuration={1500}
+                        style={styles.questionImg}
+                        source={img}/>
+                    }
+                    
+        
+                    {/* {typeQuestion == 'Ataraxienne' &&
+                        <Katex
+                            expression={expression}
+                            style={styles.katex}
+                            inlineStyle={inlineStyle}
+                            displayMode={false}
+                            throwOnError={false}
+                            errorColor="#f00"
+                            macros={{}}
+                            colorIsTextColor={false}
+                            onLoad={() => setLoaded(true)}
+                            onError={() => console.error('Error')}
+                        />
+                    } */}
+                    
+                    
+                    
+        
+                </View>
+                {/* Réponses */}
+                <View style={[styles.containerReponses,styles.widthBtn]}>
+                    {btnReponses}
+                </View>
+        
+            </SafeAreaView>
+            );
+    }
 
-            {type == 'Ataraxienne' &&
-                <MathJaxSvg 
-                fontCache={true}
-                fontSize={16}>
-                    {question}
-                </MathJaxSvg>
-            }
-            
-            
-            
-
-        </View>
-        {/* Réponses */}
-        <View style={[styles.containerReponses,styles.widthBtn]}>
-            {btnReponses}
-        </View>
-
-    </SafeAreaView>
-    );
 };
+
 
 const styles = StyleSheet.create({
     container: {
@@ -241,6 +322,8 @@ const styles = StyleSheet.create({
     },
     progressBar:{
         margin:10,
+        width:300,
+        height:7,
     },
     width:{
         width:"80%",
@@ -260,7 +343,6 @@ const styles = StyleSheet.create({
     },
     questionImg:{
         margin:10,
-        // position:"absolute",
         height:128,
         width:128,
     },
@@ -275,6 +357,9 @@ const styles = StyleSheet.create({
     },
     quiz:{
         backgroundColor:"#ffe3c0",
+    },
+    quizSelected:{
+        backgroundColor:"#ffcb8a",
     },
     logo:{
         margin:20,

@@ -15,6 +15,9 @@ const Quiz = db.define('mobile_quiz',{
     NOTE:{
         type:Sequelize.BOOLEAN,
     },
+    ETAT_QUESTION:{
+        type:Sequelize.INTEGER,
+    },
     ENCOURS:{
         type:Sequelize.BOOLEAN,
     },
