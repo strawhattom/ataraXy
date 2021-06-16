@@ -54,7 +54,7 @@ function Accueil(props) {
     }
     
     const pressQuiz = () => {
-        fetch('http://192.168.1.11:3000/quiz/'+ID_GROUPE,{
+        fetch(`http://192.168.1.11:3000/quiz/${ID_GROUPE}`,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -72,7 +72,7 @@ function Accueil(props) {
                     } else {
                         //Trie les quiz du plus récent jusqu'au plus vieux
                         responseJSON.sort(function(a,b) {
-                            return new Date(b.date) - new Date(a.date);
+                            return new Date(b.DATE_QUIZ) - new Date(a.DATE_QUIZ);
                         })
                         props.navigation.navigate('Quiz',responseJSON[0]); //Prend le quiz le plus récent
                     }
@@ -97,7 +97,7 @@ function Accueil(props) {
             },
         }).then((response) => response.json())
             .then((responseJSON) => {
-
+                //console.log(responseJSON)
                 if (responseJSON !== false){
                     //Si on a une réponse mais qu'on a pas de résultat
                     if (responseJSON.length === 0){
@@ -106,7 +106,7 @@ function Accueil(props) {
                     } else {
                         //Trie les quiz du plus récent jusqu'au plus vieux
                         responseJSON.sort(function(a,b) {
-                            return new Date(b.date) - new Date(a.date);
+                            return new Date(b.DATE_QUIZ) - new Date(a.DATE_QUIZ);
                         })
                         props.navigation.navigate('QuizText',responseJSON[0]); //Prend le quiz le plus récent
                     }

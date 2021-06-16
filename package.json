@@ -14,6 +14,7 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "expo": "^41.0.1",
+    "expo-secure-store": "~10.1.0",
     "expo-status-bar": "~1.0.4",
     "express": "^4.17.1",
     "install": "^0.13.0",
@@ -27,7 +28,8 @@
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-41.0.0.tar.gz",
     "react-native-gesture-handler": "^1.7.0",
-    "react-native-latex": "^0.5.0",
+    "react-native-mathjax": "^2.1.2",
+    "react-native-mathjax-html-to-svg": "^1.0.5",
     "react-native-progress": "^4.1.2",
     "react-native-reanimated": "~2.1.0",
     "react-native-safe-area-context": "3.2.0",
@@ -38,7 +40,7 @@
     "react-navigation-stack": "^2.10.4",
     "react-router-dom": "^5.2.0",
     "sequelize": "^6.6.2",
-    "expo-secure-store": "~10.1.0"
+    "react-native-svg": "12.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0"
