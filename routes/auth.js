@@ -51,11 +51,7 @@ router.post('/', (req,res) => {
         })
         .catch(err => console.log("Erreur connexion : " + err));
     }
-    /*
-    res.send({
-        token:'test123'
-    });
-    */
+
 });
 
 //Valide le token

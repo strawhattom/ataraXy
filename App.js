@@ -11,6 +11,7 @@ import Test from "./app/screens/Test";
 import Quiz from "./app/screens/Quiz";
 import QuizText from "./app/screens/QuizText";
 import {AuthContext} from "./app/components/context";
+import {localhost} from './config/data';
 
 const Stack = createStackNavigator();
 
@@ -27,14 +28,14 @@ export default function App({navigation}) {
             isLoading: false,
           };
         case 'SIGN_IN':
-          console.log("Connexion");
+  
           return {
             ...prevState,
             isSignout: false,
             userToken: action.token,
           };
         case 'SIGN_OUT':
-          console.log("Deconnexion");
+          
           sessionStorage.removeItem('token');
           return {
             ...prevState,
@@ -79,8 +80,8 @@ export default function App({navigation}) {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `SecureStore`
-
-        fetch('http://192.168.1.11:3000/auth',{
+        console.log("Connexion");
+        fetch('http://'+localhost+':3000/auth',{
             method:'POST',
             headers: {
                 'Accept': 'application/json',
@@ -107,7 +108,10 @@ export default function App({navigation}) {
 
         
       },
-      signOut: () => dispatch({ type: 'SIGN_OUT' }),
+      signOut: () => {
+        console.log("Deconnexion");
+        dispatch({ type: 'SIGN_OUT' })
+      },
     }),
     []
   );

@@ -12,41 +12,6 @@ function Login(props) {
     var [error,setError] = React.useState('');
     const { signIn } = React.useContext(AuthContext);
 
-    const pressLogin = async () => {
-        setLoading(true);
-        setTimeout(() => {setLoading(false)}, 3000);
-        //http://127.0.0.1/php/WATARAXY/PHP/Mobile_user_login.php
-        //http://localhost:3000/users
-        
-        fetch('http://192.168.1.11:3000/auth',{
-            method:'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id,
-                pw,
-            })
-        }).then((response) => response.json())
-            .then((responseJSON) => {
-                if (responseJSON !== false){
-                    var decoded = jwt_decode(responseJSON)
-                    if (!isLoading){
-                        sessionStorage.setItem('token',responseJSON);
-                        props.navigation.navigate('Accueil',decoded);
-                    }
-                } else {
-                    setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
-                }
-            }).catch((error)=>{
-                console.log("Erreur : "+ error);
-        });
-
-    };
-    
-
-
     if(isLoading){
         
         //Timer après 1s, l'appli se charge

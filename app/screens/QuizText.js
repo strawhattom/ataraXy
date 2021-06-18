@@ -1,22 +1,23 @@
 import React from 'react';
 import {ActivityIndicator, StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
 import {ProgressBar} from 'react-native-paper';
-//import Katex from 'react-native-katex';
+import io from "socket.io-client";
 
-function QuizText(props) {
 
-    console.log("Loading quiz text");
+const socket = io('ws://192.168.1.11:3000/');
+
+const QuizText = (props) => {
 
     const [points,setPoint] = React.useState(2);
     const [temps,setTemps] = React.useState(10);
     const [question,setQuestion] = React.useState("Question par défaut");
     const [typeQuestion,setTypeQuestion] = React.useState("Texte");
-    const [idquestion,setIdQuestion] = React.useState(0);
+    const [idquestion,setIdQuestion] = React.useState(1);
     const [reponses,setReponses] = React.useState(['Juste','Mauvaise 1','Mauvaise 2','Mauvaise 3']);
     const [reponses_binaire,setReponsesBinaire] = React.useState('1000');
     const [img,setImgSrc] = React.useState('');
     const [progress,setProgress] = React.useState(0);
-    const [timer,setTimer] = React.useState(10);
+    var timer;
     const [isLoading, setLoading] = React.useState(true);
     const [expression, setExpression] = React.useState("We give illustrations for the three processes $e^+e^-$, gluon-gluon and $\\gamma\\gamma \\to W t\\bar b$.");
 
@@ -97,7 +98,7 @@ function QuizText(props) {
                         const question = responseJSON[0];
                         setPoint(question.POINTS);
                         setTemps(question.TEMPS);
-                        setTimer(question.TEMPS);
+                        timer = question.TEMPS;
                         setIdQuestion(question.ID_QUESTION);
                         setTypeQuestion(question.TYPE);
 
@@ -124,41 +125,33 @@ function QuizText(props) {
             }).catch((error)=>{
                 console.log("Erreur : "+ error);
         });
-    
-    //Fonction qui permet de savoir si il y a un changement de question à faire
-    const checkUpdate = () => {
-        fetch('http://192.168.1.11:3000/quiz/'+ID_QUIZ+'/etat',{
-            method:'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        }).then(response => response.json())
-        .then(responseJSON => {
-            if (responseJSON !== false){
 
-                const etat = responseJSON.ETAT_QUESTION;
-
-                if (etat != idquestion){
-                    setLoading(true);
-                    setTimeout(() => {
-                        console.log('Update');
-                        setLoading(false);
-                        setIdQuestion(etat);
-                        update(etat);
-                    },1000);
-                }
-
-            } else {
-                console.log("Retourne false via le serveur");
-            }
-        })
-    }
-
+    //useEffect est lancé 1 fois à la chargement de la page
+    //Dans le 2ème argument (un tableau) si la state d'un des hook changent, useEffect est appelé directement.
     React.useEffect(
         () => {
-            checkUpdate();
-            const intervalUpdate = setInterval(checkUpdate,5000);
+
+            console.log("Loading quiz text");
+
+            //Connexion au socket
+            
+            socket.emit('joinRoom',ID_GROUPE);
+
+            socket.on('pass-question', (idq) => {
+                setIdQuestion(idq);
+                console.log("Passe une question sur le mobile");
+            });
+
+            socket.on('start-quiz', () => {
+                console.log("Mobile : quiz lancé");
+            });
+            
+            socket.on('stop-quiz',() => {
+                console.log("Mobile : quiz stoppé");
+                props.navigation.navigate('Accueil');
+            });
+
+            //Fetch pour obtenir le nombre de question du quiz
             fetch('http://192.168.1.11:3000/questions/'+ID_QUIZ,{
                 method:'GET',
                 headers: {
@@ -170,30 +163,41 @@ function QuizText(props) {
                     setNbQuestion(responseJSON.length);
             })
             .catch(err => console.err(err));
-            
-            if (!isLoading){
-                const intervalBar = setInterval(() => {
-                    if (temps != 0) {
-                        //Baisse le compteur de temps
-                        setTimer(timer-1);
-                        //Met à jours la barre de progression
-                        setProgress(timer/temps);
-                    } else {
-                        setLoading(true);
-                        setProgress(1);
-                        clearInterval(intervalBar);
-                        return;
-                    }
-                },1000);
-            }
         }
         ,[]
     )
-    //update();
-    
 
-    
+    //Si la state idquestion change
+    React.useEffect(
+        () => {
+            update(idquestion);
 
+            const intervalBar = setInterval(() => {
+                if (timer != 0) {
+                    //Baisse le compteur de temps
+                    timer--;
+                    //Met à jours la barre de progression
+                    setProgress(timer/temps);
+                    
+                } else {
+                    setLoading(true);
+                    setProgress(1);
+                    clearInterval(intervalBar);
+                    return;
+                }
+            },1000);
+
+        }
+        ,[idquestion]
+    )
+
+    // React.useEffect(
+    //     () => {
+            
+    //     },
+    //     [timer]
+    // )
+    
     if (isLoading) {
         setTimeout(() => {
             setLoading(false);

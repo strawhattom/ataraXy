@@ -3,20 +3,18 @@ import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} f
 import {AuthContext} from "../components/context";
 import jwt_decode from "jwt-decode";
 import * as SecureStore from 'expo-secure-store';
-
+import {localhost} from '../../config/data';
 
 function Accueil(props) {
 
     const { signOut } = React.useContext(AuthContext);
 
-    
     var decoded ;
     /*
     const token = async () => await SecureStore.getItemAsync('token');
     
     if (token){
         decoded = jwt_decode(token);
-        
     }
     */
     const token = sessionStorage.getItem('token');
@@ -25,36 +23,34 @@ function Accueil(props) {
     }
     const {id,ID_GROUPE,NOM,PRENOM} = decoded;
 
-    const {qActif,setActif} = React.useState(false);
-
-    const pressDeco = () =>{
-        /*
-        Alert.alert(
-            'Déconnexion',
-            'Vous êtes sur le point de vous déconnecter',
-            [
-                {
-                    text:"Valider", onPress:() => {
-                        props.navigation.navigate('Login');
-                        sessionStorage.removeItem('token');
-                        console.log('Valider OK');
-                    }
+    // const pressDeco = () =>{
+    //     /*
+    //     Alert.alert(
+    //         'Déconnexion',
+    //         'Vous êtes sur le point de vous déconnecter',
+    //         [
+    //             {
+    //                 text:"Valider", onPress:() => {
+    //                     props.navigation.navigate('Login');
+    //                     sessionStorage.removeItem('token');
+    //                     console.log('Valider OK');
+    //                 }
                     
-                },
-                {
-                    text:"Annuler", onPress:() => console.log('Annuler OK'),
-                    style:"cancel"
-                }
-            ]
-        );
-        */
-        props.navigation.navigate('Login');
-        //SecureStore.deleteItemAsync('token');
-        sessionStorage.remoevItem('token');
-    }
+    //             },
+    //             {
+    //                 text:"Annuler", onPress:() => console.log('Annuler OK'),
+    //                 style:"cancel"
+    //             }
+    //         ]
+    //     );
+    //     */
+    //     props.navigation.navigate('Login');
+    //     //SecureStore.deleteItemAsync('token');
+    //     sessionStorage.removeItem('token');
+    // }
     
     const pressQuiz = () => {
-        fetch(`http://192.168.1.11:3000/quiz/${ID_GROUPE}`,{
+        fetch(`http://`+localhost+`:3000/quiz/${ID_GROUPE}`,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -63,18 +59,17 @@ function Accueil(props) {
         }).then((response) => response.json())
             .then((responseJSON) => {
 
-                console.log(responseJSON);
                 if (responseJSON !== false){
                     //Si on a une réponse mais qu'on a pas de résultat
                     if (responseJSON.length === 0){
-                        console.log("Pas de quiz disponible, on ne fait rien");
+                        console.log("Pas de quiz disponible qui sont en cours");
                         return;
                     } else {
                         //Trie les quiz du plus récent jusqu'au plus vieux
                         responseJSON.sort(function(a,b) {
                             return new Date(b.DATE_QUIZ) - new Date(a.DATE_QUIZ);
                         })
-                        props.navigation.navigate('Quiz',responseJSON[0]); //Prend le quiz le plus récent
+                        props.navigation.navigate('Quiz',{...responseJSON[0],id,NOM,PRENOM}); //Prend le quiz le plus récent
                     }
                 } else {
                     console.log("Retourne false via le serveur");
@@ -82,14 +77,12 @@ function Accueil(props) {
             }).catch((error)=>{
                 console.log("Erreur : "+ error);
         });
-        
-
-        console.log("Veut rentrer dans le quiz");
+            
     }
 
     //Gestion d'appuie sur "Accéder aux cours"
     const pressQuizText = () => {
-        fetch('http://192.168.1.11:3000/quiz/'+ID_GROUPE,{
+        fetch('http://'+localhost+':3000/quiz/'+ID_GROUPE,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -119,17 +112,8 @@ function Accueil(props) {
         
     }
 
-    /*
-    const pressGestion = () => {
-        fetch('http://192.168.8.11:3000/users')
-          .then(response => response.json())
-          .then(users => console.warn(users))
-        .done();
-        props.navigation.navigate('Test');
-    }
-    */
 
-    //Si c'est M. Hébert
+    //Si c'est M. Hébert (à changer pour les futurs admins)
     if (id == 19){
         return (
             <SafeAreaView style={styles.container}>
@@ -169,7 +153,7 @@ function Accueil(props) {
                             </Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    {/* <TouchableOpacity>
                         <View style={[styles.button,styles.faireqcm]} > 
                             <Text>
                                 {"Faire vos QCM"}
@@ -184,7 +168,7 @@ function Accueil(props) {
                                 {"Accéder aux cours"}
                             </Text>
                         </View>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
                 <View style={[styles.containerDeco,styles.width]}>
                     <TouchableOpacity onPress={signOut}>
@@ -227,7 +211,7 @@ function Accueil(props) {
                             </Text>
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity>
+                    {/* <TouchableOpacity>
                         <View style={[styles.button,styles.faireqcm]} > 
                             <Text>
                                 {"Faire vos QCM"}
@@ -242,7 +226,7 @@ function Accueil(props) {
                                 {"Accéder aux cours"}
                             </Text>
                         </View>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
                 <View style={[styles.containerDeco,styles.width]}>
                     <TouchableOpacity onPress={signOut}>
