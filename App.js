@@ -7,16 +7,18 @@ import * as SecureStore from 'expo-secure-store';
 //import Navigator from "./routes/homeStack";
 import Login from "./app/screens/Login";
 import Accueil from "./app/screens/Accueil";
-import Test from "./app/screens/Test";
 import Quiz from "./app/screens/Quiz";
-import QuizText from "./app/screens/QuizText";
-import {AuthContext} from "./app/components/context";
+
+//Contextes
+import {AuthContext} from "./app/context/authContext";
+import {SocketContext,useSocket} from "./app/context/socketContext";
+import {QuizContext,useQuiz} from './app/context/quizContext';
+
 import {localhost} from './config/data';
 
 const Stack = createStackNavigator();
 
-
-export default function App({navigation}) {
+export default function App() {
 
   const [state, dispatch] = React.useReducer(
     (prevState, action) => {
@@ -119,46 +121,41 @@ export default function App({navigation}) {
   return(
     <>
       <AuthContext.Provider value={authContext}>
-        <NavigationContainer>
-          <Stack.Navigator
-            screenOptions={{
-            headerShown: false
-          }}>
-            {state.userToken == null ? (
-              <Stack.Screen
-                name="Login"
-                component={Login}
-                options={{
-                  title: 'Sign in',
-                  // When logging out, a pop animation feels intuitive
-                  // You can remove this if you want the default 'push' animation
-                  animationTypeForReplace: state.isSignout ? 'pop' : 'push',
-                }}
-              />
-            ) : (
-              <>
-                <Stack.Screen
-                  name="Accueil"
-                  component={Accueil}
-                />
-                <Stack.Screen
-                  name="Test"
-                  component={Test}
-                />
-                <Stack.Screen
-                  name="Quiz"
-                  component={Quiz}
-                />
-                <Stack.Screen
-                  name="QuizText"
-                  component={QuizText}
-                />
-              </>
-            )}
-            
-              
-          </Stack.Navigator>
-        </NavigationContainer>
+        <QuizContext.Provider value={useQuiz}>
+          <SocketContext.Provider value={useSocket}>
+            <NavigationContainer>
+              <Stack.Navigator
+                screenOptions={{
+                headerShown: false
+              }}>
+                {state.userToken == null ? (
+                  <Stack.Screen
+                    name="Login"
+                    component={Login}
+                    options={{
+                      title: 'Sign in',
+                      // When logging out, a pop animation feels intuitive
+                      // You can remove this if you want the default 'push' animation
+                      animationTypeForReplace: state.isSignout ? 'pop' : 'push',
+                    }}
+                  />
+                ) : (
+                  <>
+                    <Stack.Screen
+                      name="Accueil"
+                      component={Accueil}
+                    />
+                    <Stack.Screen
+                      name="Quiz"
+                      component={Quiz}
+                    />
+                  </>
+                )}
+                
+              </Stack.Navigator>
+            </NavigationContainer>
+          </SocketContext.Provider>
+        </QuizContext.Provider>
       </AuthContext.Provider>
     </>
     )

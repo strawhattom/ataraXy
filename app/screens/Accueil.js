@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
-import {AuthContext} from "../components/context";
+import {AuthContext} from "../context/authContext";
 import jwt_decode from "jwt-decode";
 import * as SecureStore from 'expo-secure-store';
 import {localhost} from '../../config/data';

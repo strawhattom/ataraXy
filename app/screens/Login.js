@@ -2,15 +2,15 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
 import jwt_decode from "jwt-decode";
-import {AuthContext} from "../components/context";
+import {AuthContext} from "../context/authContext";
 
 function Login(props) {
     
+    const {error} = React.useContext()
     const [id,onChangeId] = React.useState('');
     const [pw,onChangePw] = React.useState('');
-    const [isLoading,setLoading] = React.useState(false);
-    var [error,setError] = React.useState('');
     const { signIn } = React.useContext(AuthContext);
+    const [isLoading, setLoading] = React.useState(true);
 
     if(isLoading){
         

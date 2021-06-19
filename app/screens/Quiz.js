@@ -1,46 +1,10 @@
 import React from 'react';
 import { Animated, Easing, StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
 import {ProgressBar} from 'react-native-paper';
-import io from 'socket.io-client';
-import {localhost} from '../../config/data';
-
-const socket = io('ws://' + localhost + ':3000/');
 
 const Quiz = (props) => {
-    const {id,NOM,PRENOM,DATE_QUIZ,ID_GROUPE,ID_QUIZ,NOTE,ETAT_QUESTION} = props.route.params;
-
-    const [attendre,setAttendre] = React.useState(false); //Attendre la prochaine question
-    const [isLoading, setLoading] = React.useState(true); //Attente que le quiz se lance
-
-    const blagues = [
-                        "La réponse universelle est 42.",
-                        "Tu savais que j'adore les dragibus ?",
-                        "Un jour je serai le meilleur dresseur !",
-                        "Elle est où la poulette ?",
-                        "Faut pas respirer la compote ; ça fait tousser !",
-                    ];
-    const [blague,setBlague] = React.useState(blagues[0]);
-
-    
-    const [points,setPoint] = React.useState(2);
-    const [temps,setTemps] = React.useState(10);
-    const [question,setQuestion] = React.useState("Question par défaut");
-    const [typeQuestion,setTypeQuestion] = React.useState("Texte");
-    const [idquestion,setIdQuestion] = React.useState(1);
-    const [reponses,setReponses] = React.useState(['Juste','Mauvaise 1','Mauvaise 2','Mauvaise 3']);
-    const [reponses_binaire,setReponsesBinaire] = React.useState('1000');
-    const [img,setImgSrc] = React.useState('');
-    const [progress,setProgress] = React.useState(0);
-    
-    const [timer,setTimer] = React.useState(10);
-    const [intervalTimer,setIntervalTimer] = React.useState();
-    
-    const [nbQuestion,setNbQuestion] = React.useState(1);
-
-    const [reponseUser, setReponseUser] = React.useState([]);
 
     var btnReponses = [];
-
 
     const pressReponse = (i) => {
 
@@ -173,8 +137,6 @@ const Quiz = (props) => {
     //useEffect est lancé 1 fois à la chargement de la page
     //Dans le 2ème argument (un tableau) si la state d'un des hook changent, useEffect est appelé directement.
     React.useEffect(() => {
-
-            socket.emit('joinRoom',{PRENOM,ID_GROUPE});
 
             if (ETAT_QUESTION == 1) {
                 //Pour faire une boucle, ajouter le timing dans le loop
