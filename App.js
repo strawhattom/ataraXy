@@ -12,13 +12,15 @@ import Quiz from "./app/screens/Quiz";
 //Contextes
 import {AuthContext} from "./app/context/authContext";
 import {SocketContext,useSocket} from "./app/context/socketContext";
-import {QuizContext,useQuiz} from './app/context/quizContext';
+import {QuizContext, useQuiz} from './app/context/quizContext';
 
-import {localhost} from './config/data';
+import {localhost} from './config/host';
 
 const Stack = createStackNavigator();
 
 export default function App() {
+
+  const [error,setError] = React.useState('');
 
   const [state, dispatch] = React.useReducer(
     (prevState, action) => {
@@ -82,7 +84,7 @@ export default function App() {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `SecureStore`
-        console.log("Connexion");
+        
         fetch('http://'+localhost+':3000/auth',{
             method:'POST',
             headers: {
@@ -99,9 +101,10 @@ export default function App() {
                   //SecureStore.setItemAsync('token',responseJSON)
                   //.catch(err => console.log("Error storing token : " + err));
                   sessionStorage.setItem('token',responseJSON)
+                  console.log("Connexion");
                   dispatch({ type: 'SIGN_IN', token: responseJSON });
                 } else {
-                  //setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
+                  setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
                   console.log("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
                 }
             }).catch((error)=>{
@@ -114,47 +117,45 @@ export default function App() {
         console.log("Deconnexion");
         dispatch({ type: 'SIGN_OUT' })
       },
+      error,
     }),
-    []
+    [error]
   );
   
   return(
     <>
       <AuthContext.Provider value={authContext}>
-        <QuizContext.Provider value={useQuiz}>
-          <SocketContext.Provider value={useSocket}>
-            <NavigationContainer>
-              <Stack.Navigator
-                screenOptions={{
-                headerShown: false
-              }}>
-                {state.userToken == null ? (
+        <QuizContext.Provider value={useQuiz()}>
+          <NavigationContainer>
+            <Stack.Navigator
+              screenOptions={{
+              headerShown: false
+            }}>
+              {state.userToken == null ? (
+                <Stack.Screen
+                  name="Login"
+                  component={Login}
+                  options={{
+                    title: 'Sign in',
+                    // When logging out, a pop animation feels intuitive
+                    // You can remove this if you want the default 'push' animation
+                    animationTypeForReplace: state.isSignout ? 'pop' : 'push',
+                  }}
+                />
+              ) : (
+                <>
                   <Stack.Screen
-                    name="Login"
-                    component={Login}
-                    options={{
-                      title: 'Sign in',
-                      // When logging out, a pop animation feels intuitive
-                      // You can remove this if you want the default 'push' animation
-                      animationTypeForReplace: state.isSignout ? 'pop' : 'push',
-                    }}
+                    name="Accueil"
+                    component={Accueil}
                   />
-                ) : (
-                  <>
-                    <Stack.Screen
-                      name="Accueil"
-                      component={Accueil}
-                    />
-                    <Stack.Screen
-                      name="Quiz"
-                      component={Quiz}
-                    />
-                  </>
-                )}
-                
-              </Stack.Navigator>
-            </NavigationContainer>
-          </SocketContext.Provider>
+                  <Stack.Screen
+                    name="Quiz"
+                    component={Quiz}
+                  />
+                </>
+              )}
+            </Stack.Navigator>
+          </NavigationContainer>
         </QuizContext.Provider>
       </AuthContext.Provider>
     </>

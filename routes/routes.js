@@ -36,8 +36,8 @@ io.on('connection', (socket) => {
         console.log("Un administrateur est sur la page d'animation de quiz");
     })
 
-    socket.on('joinRoom', ({PRENOM, ID_GROUPE}) => {
-        console.log(`${PRENOM} joined group ${ID_GROUPE}`);
+    socket.on('joinRoom', ({PRENOM, GROUPE}) => {
+        console.log(`${PRENOM} joined group ${GROUPE}`);
     })
 
     //Ajoute un mot clé d'evenement "lancer", on pourra emettre un message avec comme mot clé "lancer" depuis le web.

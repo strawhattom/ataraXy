@@ -1,15 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
-import jwt_decode from "jwt-decode";
 import {AuthContext} from "../context/authContext";
 
-function Login(props) {
+function Login() {
     
-    const {error} = React.useContext()
     const [id,onChangeId] = React.useState('');
     const [pw,onChangePw] = React.useState('');
-    const { signIn } = React.useContext(AuthContext);
+    const { signIn, error } = React.useContext(AuthContext);
     const [isLoading, setLoading] = React.useState(true);
 
     if(isLoading){
@@ -35,8 +33,9 @@ function Login(props) {
                 </View>
                 
                 <View style={styles.containerError}>
-                    
-                    <Text style={[styles.error,styles.width]}>{error}</Text>
+                    <Text style={[styles.error,styles.width]}>
+                        {error}
+                    </Text>
                 </View>
                 <View style={[styles.containerInput,styles.width]}>
                     <TextInput 

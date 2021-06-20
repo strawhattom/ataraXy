@@ -3,54 +3,46 @@ import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} f
 import {AuthContext} from "../context/authContext";
 import jwt_decode from "jwt-decode";
 import * as SecureStore from 'expo-secure-store';
-import {localhost} from '../../config/data';
+import {localhost} from '../../config/host';
+import { useQuizContext } from '../context/quizContext';
 
 function Accueil(props) {
 
     const { signOut } = React.useContext(AuthContext);
+    const {socket,idUser,idGroupe,prenom,setIdUser,setNom,setPrenom,setIdGroupe,setIdQuiz,setEtatQuestion} = useQuizContext();
 
-    var decoded ;
-    /*
-    const token = async () => await SecureStore.getItemAsync('token');
-    
-    if (token){
-        decoded = jwt_decode(token);
-    }
-    */
-    const token = sessionStorage.getItem('token');
-    if (token){
-        decoded = jwt_decode(token);
-    }
-    const {id,ID_GROUPE,NOM,PRENOM} = decoded;
+    React.useEffect(
+        () => {
+            const token = sessionStorage.getItem('token');
+            if (token){
+                const decoded = jwt_decode(token);
 
-    // const pressDeco = () =>{
-    //     /*
-    //     Alert.alert(
-    //         'Déconnexion',
-    //         'Vous êtes sur le point de vous déconnecter',
-    //         [
-    //             {
-    //                 text:"Valider", onPress:() => {
-    //                     props.navigation.navigate('Login');
-    //                     sessionStorage.removeItem('token');
-    //                     console.log('Valider OK');
-    //                 }
+                //Vérifie le token obtenue
+                try {
+                    setIdUser(decoded.id);
+                    setIdGroupe(decoded.ID_GROUPE);
+                    setNom(decoded.NOM);
+                    setPrenom(decoded.PRENOM);
                     
-    //             },
-    //             {
-    //                 text:"Annuler", onPress:() => console.log('Annuler OK'),
-    //                 style:"cancel"
-    //             }
-    //         ]
-    //     );
-    //     */
-    //     props.navigation.navigate('Login');
-    //     //SecureStore.deleteItemAsync('token');
-    //     sessionStorage.removeItem('token');
-    // }
+                    socket.emit('joinRoom',{PRENOM:decoded.PRENOM,GROUPE:decoded.ID_GROUPE});
+
+                } catch(e) {
+                    console.error(e);
+                    signOut();
+                }
+                
+            }
+        },
+        []
+    )
+
     
+
+    
+    
+    //Appuie sur "Mode quiz"
     const pressQuiz = () => {
-        fetch(`http://`+localhost+`:3000/quiz/${ID_GROUPE}`,{
+        fetch(`http://`+localhost+`:3000/quiz/${idGroupe}`,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -69,7 +61,9 @@ function Accueil(props) {
                         responseJSON.sort(function(a,b) {
                             return new Date(b.DATE_QUIZ) - new Date(a.DATE_QUIZ);
                         })
-                        props.navigation.navigate('Quiz',{...responseJSON[0],id,NOM,PRENOM}); //Prend le quiz le plus récent
+                        setIdQuiz(responseJSON[0].ID_QUIZ);
+                        setEtatQuestion(responseJSON[0].ETAT_QUESTION);
+                        props.navigation.navigate('Quiz'); //Prend le quiz le plus récent
                     }
                 } else {
                     console.log("Retourne false via le serveur");
@@ -78,43 +72,11 @@ function Accueil(props) {
                 console.log("Erreur : "+ error);
         });
             
-    }
-
-    //Gestion d'appuie sur "Accéder aux cours"
-    const pressQuizText = () => {
-        fetch('http://'+localhost+':3000/quiz/'+ID_GROUPE,{
-            method:'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-        }).then((response) => response.json())
-            .then((responseJSON) => {
-                //console.log(responseJSON)
-                if (responseJSON !== false){
-                    //Si on a une réponse mais qu'on a pas de résultat
-                    if (responseJSON.length === 0){
-                        console.log("Pas de quiz disponible, on ne fait rien");
-                        return;
-                    } else {
-                        //Trie les quiz du plus récent jusqu'au plus vieux
-                        responseJSON.sort(function(a,b) {
-                            return new Date(b.DATE_QUIZ) - new Date(a.DATE_QUIZ);
-                        })
-                        props.navigation.navigate('QuizText',responseJSON[0]); //Prend le quiz le plus récent
-                    }
-                } else {
-                    console.log("Retourne false via le serveur");
-                }
-            }).catch((error)=>{
-                console.log("Erreur : "+ error);
-        });
-        
-    }
+    };
 
 
     //Si c'est M. Hébert (à changer pour les futurs admins)
-    if (id == 19){
+    if (idUser == 19){
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.containerLogo}>
@@ -128,7 +90,7 @@ function Accueil(props) {
                 <View style={[styles.containerText,styles.width]}>
                     <Text style={styles.bienvenue}>
                         {
-                        "Salut, " + PRENOM
+                        "Salut, " + prenom
                         }
                     </Text>
                     <Text style={styles.bienvenueDesc}>
@@ -196,7 +158,7 @@ function Accueil(props) {
                 
                 <View style={[styles.containerText,styles.width]}>
                     <Text style={styles.bienvenue}>
-                        {"Salut, " + PRENOM}
+                        {"Salut, " + prenom}
                     </Text>
                     <Text style={styles.bienvenueDesc}>
                         {"Bienvenue sur l'application ataraXy"}

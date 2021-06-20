@@ -1,8 +1,59 @@
 import React from 'react';
 import { Animated, Easing, StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
 import {ProgressBar} from 'react-native-paper';
+import { useQuizContext } from '../context/quizContext';
+import {localhost} from '../../config/host';
 
 const Quiz = (props) => {
+
+    const {
+        idUser,
+        idGroupe,
+        idQuestion,
+        idQuiz,
+        nom,
+        prenom,
+        points,
+        temps,
+        question,
+        etatQuestion,
+        typeQuestion,
+        reponses,
+        reponses_binaire,
+        img,
+        progress,
+        timer,
+        intervalTimer,
+        nbQuestion,
+        reponseUser,
+        blague,
+        blagues,
+        attendre,
+        isLoading,
+        socket,
+        setIdUser,
+        setIdGroupe,
+        setIdQuestion,
+        setIdQuiz,
+        setNom,
+        setPrenom,
+        setPoint,
+        setTemps,
+        setQuestion,
+        setEtatQuestion,
+        setTypeQuestion,
+        setReponses,
+        setReponsesBinaire,
+        setImgSrc,
+        setProgress,
+        setTimer,
+        setIntervalTimer,
+        setNbQuestion,
+        setReponseUser,
+        setBlague,
+        setAttendre,
+        setLoading,
+    } = useQuizContext();
 
     var btnReponses = [];
 
@@ -50,9 +101,6 @@ const Quiz = (props) => {
         outputRange: ['0deg', '360deg']
     });
     
-    const updateId = (id) => {
-        setIdQuestion(id);
-    }
 
 
     //Obtient les réponses dans un tableau en séparant la chaîne à chaque \n
@@ -90,7 +138,7 @@ const Quiz = (props) => {
     };
 
     //Par défaut on choisit la première question
-    const update = (id) => fetch('http://' + localhost + `:3000/questions/${ID_QUIZ}/${id}`,{
+    const update = (id) => fetch('http://' + localhost + `:3000/questions/${idQuiz}/${id}`,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',
@@ -138,7 +186,7 @@ const Quiz = (props) => {
     //Dans le 2ème argument (un tableau) si la state d'un des hook changent, useEffect est appelé directement.
     React.useEffect(() => {
 
-            if (ETAT_QUESTION == 1) {
+            if (etatQuestion == 1) {
                 //Pour faire une boucle, ajouter le timing dans le loop
                 Animated.loop(
                     Animated.timing(
@@ -153,16 +201,19 @@ const Quiz = (props) => {
                 ).start();
             } else {
                 setLoading(false);
-                updateId(ETAT_QUESTION);
-                console.log(ETAT_QUESTION);
+                setIdQuestion(etatQuestion);
+                console.log(etatQuestion);
             }
             
+            socket.on('stop-quiz-mobile', () => {
+                props.navigation.navigate('Accueil');
+            });
             
             //Blague aléatoire pour un utilisateur
             setBlague(blagues[Math.floor(Math.random() * (blagues.length-1) ) + 1]);
 
             //Fetch pour obtenir le nombre de réponse possible
-            fetch('http://' + localhost + ':3000/questions/'+ID_QUIZ,{
+            fetch('http://' + localhost + ':3000/questions/'+idQuiz,{
                 method:'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -177,44 +228,14 @@ const Quiz = (props) => {
         []
     )
 
-    //Si la state idquestion change
+    //Si la state idQuestion change
     React.useEffect(
         () => {
             //Lors qu'on passe la question
-            socket.on('pass-question', () => {
-                updateId(idquestion+1);
-                setAttendre(true);
-                //Envoyer les reponses au socket etc...
-
-                socket.emit('reponse',{id,NOM,PRENOM,ID_QUIZ,idquestion,reponseUser,reponses_binaire});
-                console.log(`Passe une question sur le mobile : ${idquestion}`);
-                setReponseUser([]);
-            });
-
-            //La question commence
-            socket.on('start-question', () => {
-
-                //Les chargements disparaissent
-                setLoading(false);
-                setAttendre(false);
-
-                console.log("Mobile : question lancé");
-            });
-            
-            socket.on('stop-quiz',() => {
-                console.log("Mobile : quiz stoppé");
-                setTimer(0);
-                props.navigation.navigate('Accueil');
-            });
-
-            socket.on('pause',() => {
-                console.log("Pause");
-                clearInterval(intervalTimer);
-            });
-            update(idquestion);
+            update(idQuestion);
             clearInterval(intervalTimer);
         },
-        [idquestion]
+        [idQuestion]
     );
 
     //Si la state attendre change
@@ -316,7 +337,7 @@ const Quiz = (props) => {
             {/* Numéro question et barre de progression */}
             <View style={[styles.containerQuestion,styles.width]}>
                 <Text style={styles.numeroQuestion}>
-                    {"Question " + idquestion + "/" + nbQuestion}
+                    {"Question " + idQuestion + "/" + nbQuestion}
                 </Text>
                 <ProgressBar progress={progress}
                     style={styles.progressBar}
