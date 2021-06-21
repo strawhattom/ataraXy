@@ -115,6 +115,7 @@ export default function App() {
       },
       signOut: () => {
         console.log("Deconnexion");
+        setError('');
         dispatch({ type: 'SIGN_OUT' })
       },
       error,

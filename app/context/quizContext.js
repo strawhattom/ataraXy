@@ -82,6 +82,9 @@ export const useQuiz = () => {
         clearInterval(intervalTimer);
     });
     
+    socket.on('userDisconnect', () => {
+        socket.leave(idGroupe);
+    })
 
     return {
         idUser,
