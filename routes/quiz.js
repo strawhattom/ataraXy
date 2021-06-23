@@ -1,23 +1,8 @@
 const express = require('express');
-<<<<<<< HEAD
-const express = require('express');
-=======
->>>>>>> Socket
 const router = express.Router();
 const db = require('../config/database');
 const Quiz = require('../models/Quiz');
 
-<<<<<<< HEAD
-
-//Get question list
-router.get('/', (req, res) => 
-    Quiz.findAll()
-        .then(quiz => {
-            res.send(quiz);
-        })
-        .catch(err => console.log("Erreur quiz : " + err))
-);
-=======
 //On veut voir tous les quiz
 router.get('/', (req, res) => {
     Quiz.findAll()
@@ -67,7 +52,6 @@ router.get('/:quiz/etat', (req,res) => {
         }
     })
 })
->>>>>>> Socket
 
 
 

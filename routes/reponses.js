@@ -6,8 +6,7 @@ const db = require('../config/database');
 router.post('/', (req, res) => {
     //Mettre une réponse dans la BDD
         console.log(req);
-    }   
-    
+    }
 );
 
 
