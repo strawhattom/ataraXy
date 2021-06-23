@@ -3,9 +3,17 @@ const router = express.Router();
 const Sequelize = require('sequelize');
 const db = require('../config/database');
 const Users = require('../models/Users');
+<<<<<<< HEAD
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 
+=======
+
+//Bibliothèque pour la gestion de token
+const jwt = require('jsonwebtoken');
+
+//Bibliothèque de cryptologie
+>>>>>>> Socket
 const crypto = require('crypto');
 
 //Get login
@@ -37,7 +45,11 @@ router.post('/', (req,res) => {
                 //Crée le token avec les informations de l'utilisateurs
                 //pour la session qui expire au bout de 15 minutes
                 //de la forme (s'il est décodé):
+<<<<<<< HEAD
                 //{id:id users,ID_GROUPE:idDuGroupe,NOM:nom,PRENOM:prenom}
+=======
+                //{id:idUsers,ID_GROUPE:idDuGroupe,NOM:nom,PRENOM:prenom}
+>>>>>>> Socket
                 const token = jwt.sign(response.dataValues,
                 'supersecret'
                 ,
@@ -49,11 +61,15 @@ router.post('/', (req,res) => {
         })
         .catch(err => console.log("Erreur connexion : " + err));
     }
+<<<<<<< HEAD
     /*
     res.send({
         token:'test123'
     });
     */
+=======
+
+>>>>>>> Socket
 });
 
 //Valide le token

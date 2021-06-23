@@ -28,6 +28,7 @@ const Questions = db.define('quiz_data',{
     },
     IMG_SRC:{
         type:Sequelize.BLOB('long'),
+        allowNull: true,
     },
 });
 

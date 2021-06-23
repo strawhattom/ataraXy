@@ -4,6 +4,7 @@ const db = require('../config/database');
 const Quiz = db.define('mobile_quiz',{
     ID_QUIZ:{
         type:Sequelize.INTEGER,
+<<<<<<< HEAD
     },
     ID_QUESTION:{
         type:Sequelize.INTEGER,
@@ -32,3 +33,25 @@ const Quiz = db.define('mobile_quiz',{
 });
 
 module.exports = Questions;
+=======
+        primaryKey:true,
+    },
+    DATE_QUIZ:{
+        type:Sequelize.DATE,
+    },
+    ID_GROUPE:{
+        type:Sequelize.INTEGER,
+    },
+    NOTE:{
+        type:Sequelize.BOOLEAN,
+    },
+    ETAT_QUESTION:{
+        type:Sequelize.INTEGER,
+    },
+    ENCOURS:{
+        type:Sequelize.BOOLEAN,
+    },
+});
+
+module.exports = Quiz;
+>>>>>>> Socket

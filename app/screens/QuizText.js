@@ -1,80 +1,292 @@
 import React from 'react';
-import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
-import Animated from 'react-native-reanimated';
-import ProgressBar from 'react-native-progress/Bar';
+import {ActivityIndicator, StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
+import {ProgressBar} from 'react-native-paper';
+import io from "socket.io-client";
 
 
-function QuizText(props) {
+const socket = io('ws://192.168.1.11:3000/');
+
+const QuizText = (props) => {
+
+    const [points,setPoint] = React.useState(2);
+    const [temps,setTemps] = React.useState(10);
+    const [question,setQuestion] = React.useState("Question par défaut");
+    const [typeQuestion,setTypeQuestion] = React.useState("Texte");
+    const [idquestion,setIdQuestion] = React.useState(1);
+    const [reponses,setReponses] = React.useState(['Juste','Mauvaise 1','Mauvaise 2','Mauvaise 3']);
+    const [reponses_binaire,setReponsesBinaire] = React.useState('1000');
+    const [img,setImgSrc] = React.useState('');
+    const [progress,setProgress] = React.useState(0);
+    var timer;
+    const [isLoading, setLoading] = React.useState(true);
+    const [expression, setExpression] = React.useState("We give illustrations for the three processes $e^+e^-$, gluon-gluon and $\\gamma\\gamma \\to W t\\bar b$.");
+
+    const [nbQuestion,setNbQuestion] = React.useState(1);
+
+    var btnReponses = [];
+
+    //Créer les boutons en fonctions du nombre de réponses et les stockes dans le tableau btnReponses
+    for (let i = 0;i<reponses.length;i++){
+        btnReponses.push(
+            <TouchableOpacity 
+            key={i}
+            val={reponses_binaire[i]}
+            selected={false}
+            /*onPress={pressGestion}*/>
+                <View style={[styles.button,styles.quiz]} > 
+                    <Text>
+                        {reponses[i]}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+        )
+    }
+    const {DATE_QUIZ,ID_GROUPE,ID_QUIZ,NOTE} = props.route.params
+
+    //console.log("Date : " + DATE_QUIZ + '\n'+ "ID Groupe : " + ID_GROUPE + '\n'+ "ID Quiz : " + ID_QUIZ + '\n'+ "Noté : " + NOTE + '\n');
+
+    //Obtient les réponses dans un tableau en séparant la chaîne à chaque \n
+    const recup_reponse = (chaine) => {
+        var tempReponses = chaine.split("\\n");
+        tempReponses.pop();
+        return tempReponses;
+    }
+    
+    const atar = (qcm) => {
+        //Fetch un tableau contenant : la question et les réponses en fonction du QCM.
+        fetch(`http://127.0.0.1/php/WATARAXY/PHP/AutoQCMMobile.php?qcm=${qcm}`,{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+        .then(responseJSON => {
+            console.log(responseJSON)
+            //On a reçu une réponse positive
+            if (typeof responseJSON !== 'undefined' && responseJSON.message == true){
+                
+                let tempReponses = [];
+                setQuestion(responseJSON.question);
+                const reponses = responseJSON.reponses;
+                for (let i = 0;i<reponses.length;i++){
+                    tempReponses.push(reponses[i].tex);
+                }
+                setReponses(tempReponses);  
+            } else {
+                console.log("Réponse vide du serveur");
+            }
+        }).catch(err => console.log("Erreur obtention reponse : " + err))
+    }
 
     
-    return (
-    <SafeAreaView style={styles.container}>
-        {/* Logo dans le coin */}
-        <View style={styles.containerLogo}>
-            <Image 
-            fadeDuration={1500}
-            style={styles.tinylogo}
-            source={require('../assets/icon.png')
-            }/>
-        </View>
-        {/* Nombre de points*/}
-        <View style={[styles.containerPoints,styles.width]}>
-            <Text style={styles.numeroQuestion}>
-                {"23"}
-            </Text>
-        </View>
-        {/* Numéro question et barre de progression */}
-        <View style={[styles.containerQuestion,styles.width]}>
-            <Text style={styles.numeroQuestion}>
-                {"Question 1/8"}
-            </Text>
-            <View style={styles.progressBar}>
-                <ProgressBar progress={0.3} width={300} height={7} color={"salmon"} animated/>
-            </View>
-        </View>
-        {/* Contenu de la question */}
-        <View style={styles.containerContenu}>
-            <Text style={styles.question}>
-                {"Quelle est la réponse universelle ?"}
-            </Text>
-        </View>
-        {/* Réponses */}
-        <View style={[styles.containerReponses,styles.widthBtn]}>
-            <TouchableOpacity /*onPress={pressGestion}*/>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse A"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse B"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-            <TouchableOpacity>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse C"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity>
-                <View 
-                style={[styles.button,styles.quiz]} > 
-                    <Text>
-                        {"Reponse D"}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        </View>
+    //Par défaut on choisit la première question
+    const update = (id) => fetch(`http://192.168.1.11:3000/questions/${ID_QUIZ}/${id}`,{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json())
+            .then((responseJSON) => {
 
-    </SafeAreaView>
-    );
+                if (responseJSON !== false){
+                    //Si on a une réponse mais qu'on a pas de résultat
+                    if (responseJSON.length === 0){
+                        return;
+                    } else {
+                        const question = responseJSON[0];
+                        setPoint(question.POINTS);
+                        setTemps(question.TEMPS);
+                        timer = question.TEMPS;
+                        setIdQuestion(question.ID_QUESTION);
+                        setTypeQuestion(question.TYPE);
+
+                        if (question.TYPE != 'Ataraxienne'){
+                            setQuestion(question.QUESTION);
+                            const reponses = recup_reponse(question.REPONSES);
+                            setReponses(reponses);
+                        } else {
+                            atar(question.QUESTION);
+                        }
+                        setReponsesBinaire(question.REPONSES_BINAIRE);
+                        
+                        let img = '';
+                        //Image
+                        if (question.TYPE == 'Image'){
+                            const {data} = question.IMG_SRC;
+                            img = new Buffer.from(data).toString('ascii');
+                        }
+                        setImgSrc(img);
+                    }
+                } else {
+                    console.log("Retourne false via le serveur");
+                }
+            }).catch((error)=>{
+                console.log("Erreur : "+ error);
+        });
+
+    //useEffect est lancé 1 fois à la chargement de la page
+    //Dans le 2ème argument (un tableau) si la state d'un des hook changent, useEffect est appelé directement.
+    React.useEffect(
+        () => {
+
+            console.log("Loading quiz text");
+
+            //Connexion au socket
+            
+            socket.emit('joinRoom',ID_GROUPE);
+
+            socket.on('pass-question', (idq) => {
+                setIdQuestion(idq);
+                console.log("Passe une question sur le mobile");
+            });
+
+            socket.on('start-quiz', () => {
+                console.log("Mobile : quiz lancé");
+            });
+            
+            socket.on('stop-quiz',() => {
+                console.log("Mobile : quiz stoppé");
+                props.navigation.navigate('Accueil');
+            });
+
+            //Fetch pour obtenir le nombre de question du quiz
+            fetch('http://192.168.1.11:3000/questions/'+ID_QUIZ,{
+                method:'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            }).then((response) => response.json())
+            .then((responseJSON) => {
+                    setNbQuestion(responseJSON.length);
+            })
+            .catch(err => console.err(err));
+        }
+        ,[]
+    )
+
+    //Si la state idquestion change
+    React.useEffect(
+        () => {
+            update(idquestion);
+
+            const intervalBar = setInterval(() => {
+                if (timer != 0) {
+                    //Baisse le compteur de temps
+                    timer--;
+                    //Met à jours la barre de progression
+                    setProgress(timer/temps);
+                    
+                } else {
+                    setLoading(true);
+                    setProgress(1);
+                    clearInterval(intervalBar);
+                    return;
+                }
+            },1000);
+
+        }
+        ,[idquestion]
+    )
+
+    // React.useEffect(
+    //     () => {
+            
+    //     },
+    //     [timer]
+    // )
+    
+    if (isLoading) {
+        setTimeout(() => {
+            setLoading(false);
+        },1000);
+        return (
+            <ActivityIndicator size="large"
+            color='#ffe3c0'
+            style={
+                {
+                    flex: 1,
+                    justifyContent: "center",
+                    backgroundColor:"white",    
+                }
+            }/>
+        )
+    } else {
+
+        return (
+            <SafeAreaView style={styles.container}>
+                {/* Logo dans le coin */}
+                <TouchableOpacity 
+                    style={styles.containerLogo} 
+                    onPress={() => {props.navigation.navigate('Accueil')}}>
+                        <Image 
+                        fadeDuration={1500}
+                        style={styles.tinylogo}
+                        source={require('../assets/icon.png')
+                        }/>
+                </TouchableOpacity>
+                {/* Nombre de points*/}
+                <View style={[styles.containerPoints,styles.width]}>
+                    <Text style={styles.numeroQuestion}>
+                        {points}
+                    </Text>
+                </View>
+                {/* Numéro question et barre de progression */}
+                <View style={[styles.containerQuestion,styles.width]}>
+                    <Text style={styles.numeroQuestion}>
+                        {"Question " + idquestion + "/" + nbQuestion}
+                    </Text>
+                    <ProgressBar progress={progress}
+                        style={styles.progressBar}
+                        color={"salmon"} animated/>
+                </View>
+                {/* Contenu de la question */}
+                <View style={[styles.containerContenu,styles.width]}>
+        
+                    <Text style={styles.question}>
+                        {question}
+                    </Text>
+        
+                    {typeQuestion == 'Image' &&
+                        <Image 
+                        fadeDuration={1500}
+                        style={styles.questionImg}
+                        source={img}/>
+                    }
+                    
+        
+                    {/* {typeQuestion == 'Ataraxienne' &&
+                        <Katex
+                            expression={expression}
+                            style={styles.katex}
+                            inlineStyle={inlineStyle}
+                            displayMode={false}
+                            throwOnError={false}
+                            errorColor="#f00"
+                            macros={{}}
+                            colorIsTextColor={false}
+                            onLoad={() => setLoaded(true)}
+                            onError={() => console.error('Error')}
+                        />
+                    } */}
+                    
+                    
+                    
+        
+                </View>
+                {/* Réponses */}
+                <View style={[styles.containerReponses,styles.widthBtn]}>
+                    {btnReponses}
+                </View>
+        
+            </SafeAreaView>
+            );
+    }
+
 };
+
 
 const styles = StyleSheet.create({
     container: {
@@ -88,25 +300,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"13%",
+        height:"8%",
     },
     containerPoints:{
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"7%",
+        height:"13%",
     },
     containerQuestion:{
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"15%",
+        height:"10%",
     },
     containerContenu:{
         alignItems: 'center',
         justifyContent:'center',
         width:"100%",
-        height:"15%",
+        height:"auto",
     },
     containerReponses:{
         margin:10,
@@ -114,6 +326,8 @@ const styles = StyleSheet.create({
     },
     progressBar:{
         margin:10,
+        width:300,
+        height:7,
     },
     width:{
         width:"80%",
@@ -127,9 +341,14 @@ const styles = StyleSheet.create({
         fontWeight:'bold',
     },
     question:{
-        textAlign:'left',
+        textAlign:'center',
         fontSize:16,
         fontWeight:'bold',
+    },
+    questionImg:{
+        margin:10,
+        height:128,
+        width:128,
     },
     button:{
         margin:7,
@@ -142,6 +361,9 @@ const styles = StyleSheet.create({
     },
     quiz:{
         backgroundColor:"#ffe3c0",
+    },
+    quizSelected:{
+        backgroundColor:"#ffcb8a",
     },
     logo:{
         margin:20,

@@ -2,54 +2,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import jwt_decode from 'jwt-decode';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
+import {AuthContext} from "../context/authContext";
 
+function Login() {
+    
+    const [id,onChangeId] = React.useState('');
+    const [pw,onChangePw] = React.useState('');
+    const { signIn, error } = React.useContext(AuthContext);
+    const [isLoading, setLoading] = React.useState(true);
 
-export default function Login(props){
-
-    const [id,onChangeId] = React.useState();
-    const [pw,onChangePw] = React.useState();
-
-    const {signIn} = React.useContext(AuthContext);
-
-    const [error,setError] = React.useState('');
-    const pressLogin = async () => {
-
-
-        fetch('http://192.168.1.11:3000/auth',{
-            method:'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id,
-                pw,
-            })
-        }).then((response) => response.json())
-            .then((responseJSON) => {
-                
-                if (responseJSON !== false){
-                    try{
-                        var decoded = jwt_decode(responseJSON);
-                    } catch (err){
-                        setError("Une erreur est survenue, le token est invalide");
-                    }
-                    if (!isLoading){
-                        //Ajoute dans la session le token de l'utilisateur
-                        sessionStorage.setItem("token",responseJSON);
-                        props.navigation.navigate('Accueil',decoded);
-                        console.log("Connexion");
-                    }
-                } else {
-                    setError("Une erreur est survenue, votre identifiant et/ou votre mot de passe sont incorrects");
-                }
-            }).catch((error)=>{
-                console.log("Erreur : "+ error);
-        });
-
-    };
-
-    /*if(isLoading){
+    if(isLoading){
         
         //Timer après 1s, l'appli se charge
         setTimeout(() => {setLoading(false)}, 1000);
@@ -60,70 +22,61 @@ export default function Login(props){
         color="#000000" />);
 
     } else {
-    */
-    /*
-    const handleSubmit = async () => {
-        console.log({
-            id,
-            pw
-        })
-        const token = await loginUser({
-            id,
-            pw
-        });
-        setToken(token);
-    }
-    */
-    return (
-        <View style={styles.container}>
-            
-            <View style={styles.containerLogo}>
-                <Image 
-                fadeDuration={1500}
-                style={styles.logo}
-                source={require('../assets/icon.png')
-                }/>
+        return (
+            <View style={styles.container}>
+                
+                <View style={styles.containerLogo}>
+                    <Image 
+                    fadeDuration={1500}
+                    style={styles.logo}
+                    source={require('../assets/icon.png')
+                    }/>
+                </View>
+                
+                <View style={styles.containerError}>
+                    <Text style={[styles.error,styles.width]}>
+                        {error}
+                    </Text>
+                </View>
+                <View style={[styles.containerInput,styles.width]}>
+                    <TextInput 
+                    style={styles.input}
+                    onChangeText={onChangeId}
+                    value={id}
+                    placeholder={"Identifiant"}
+                    placeholderTextColor={"lightgray"}
+                    clearButtonMode='always'
+                    />
+        
+                    <TextInput
+                    style={styles.input}
+                    onChangeText={onChangePw}
+                    value={pw}
+                    placeholder={"Mot de passe"}
+                    placeholderTextColor={"lightgray"}
+                    secureTextEntry={true}
+                    maxLength={32}
+                    clearButtonMode='always'
+                    />
+
+                </View>
+                <View style={[styles.containerButton,styles.width]}>
+                    <TouchableOpacity 
+                    onPress={() => signIn({id,pw})}>
+                        <View style={[styles.button,styles.login]} > 
+                            <Text>
+                                {"S'identifier"}
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                </View>
             </View>
-            
-            <View style={styles.containerError}>
-                <Text style={[styles.error,styles.width]}>{error}</Text>
-            </View>
-            <View style={[styles.containerInput,styles.width]}>
-                <TextInput 
-                style={styles.input}
-                onChangeText={onChangeId}
-                value={id}
-                placeholder={"Identifiant"}
-                placeholderTextColor={"lightgray"}
-                />
-    
-                <TextInput
-                style={styles.input}
-                onChangeText={onChangePw}
-                value={pw}
-                placeholder={"Mot de passe"}
-                placeholderTextColor={"lightgray"}
-                secureTextEntry={true}
-                maxLength={32}
-                />
-            </View>
-            <View style={[styles.containerButton,styles.width]}>
-            <TouchableOpacity 
-                onPress={() => signIn({id,pw})}>
-                    <View style={[styles.button,styles.login]} > 
-                        <Text>
-                            {"S'identifier"}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-            </View>
-        </View>
         );
     }
 //}
 
     
-//};
+};
 
 Login.protoTypes = {
     setToken:PropTypes.func.isRequired
@@ -172,6 +125,7 @@ const styles = StyleSheet.create({
         backgroundColor:"#beeaff",
     },
     error:{
+        fontWeight:'bold',
         textAlign:'center',
         color:'red',
     },

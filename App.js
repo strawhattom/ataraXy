@@ -1,31 +1,26 @@
-import * as React from 'react';
+import React,{useState} from 'react';
 import 'react-native-gesture-handler';
-
-//Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-
 import * as SecureStore from 'expo-secure-store';
 
-
 //import Navigator from "./routes/homeStack";
-//Page disponible
 import Login from "./app/screens/Login";
 import Accueil from "./app/screens/Accueil";
-import Test from "./app/screens/Test";
 import Quiz from "./app/screens/Quiz";
 
+//Contextes
+import {AuthContext} from "./app/context/authContext";
+import {SocketContext,useSocket} from "./app/context/socketContext";
+import {QuizContext, useQuiz} from './app/context/quizContext';
+
+import {localhost} from './config/host';
+
 const Stack = createStackNavigator();
-const AuthContext = React.createContext();
 
-/*
-function setToken(userToken){
-  sessionStorage.setItem('token', JSON.stringify(userToken));
-}
-*/
+export default function App() {
 
-
-export default function App({navigation}) {
+  const [error,setError] = React.useState('');
 
   const [state, dispatch] = React.useReducer(
     (prevState, action) => {
@@ -37,12 +32,15 @@ export default function App({navigation}) {
             isLoading: false,
           };
         case 'SIGN_IN':
+  
           return {
             ...prevState,
             isSignout: false,
             userToken: action.token,
           };
         case 'SIGN_OUT':
+          
+          sessionStorage.removeItem('token');
           return {
             ...prevState,
             isSignout: true,
@@ -54,7 +52,7 @@ export default function App({navigation}) {
       isLoading: true,
       isSignout: false,
       userToken: null,
-    } 
+    }
   );
 
   React.useEffect(() => {
@@ -63,13 +61,15 @@ export default function App({navigation}) {
       let userToken;
 
       try {
-        userToken = await SecureStore.getItemAsync('userToken');
+        //userToken = await SecureStore.getItemAsync('token');
+        userToken = sessionStorage.getItem('token');
       } catch (e) {
         // Restoring token failed
+        console.log("Token restoring failed : " + e);
       }
 
       // After restoring token, we may need to validate it in production apps
-
+      
       // This will switch to the App screen or Auth screen and this loading
       // screen will be unmounted and thrown away.
       dispatch({ type: 'RESTORE_TOKEN', token: userToken });
@@ -80,41 +80,69 @@ export default function App({navigation}) {
 
   const authContext = React.useMemo(
     () => ({
-      signIn: async data => {
+      signIn: async ({id,pw}) => {
         // In a production app, we need to send some data (usually username, password) to server and get a token
         // We will also need to handle errors if sign in failed
         // After getting token, we need to persist the token using `SecureStore`
-        // In the example, we'll use a dummy token
+        
+        fetch('http://'+localhost+':3000/auth',{
+            method:'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id,
+                pw,
+            })
+        }).then((response) => response.json())
+            .then((responseJSON) => {
+                if (responseJSON !== false){
+                  //SecureStore.setItemAsync('token',responseJSON)
+                  //.catch(err => console.log("Error storing token : " + err));
+                  sessionStorage.setItem('token',responseJSON)
+                  console.log("Connexion");
+                  dispatch({ type: 'SIGN_IN', token: responseJSON });
+                } else {
+                  setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
+                  console.log("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
+                }
+            }).catch((error)=>{
+                console.log("Erreur : "+ error);
+        });
 
-        dispatch({ type: 'SIGN_IN', token: 'dummy-auth-token' });
+        
       },
-      signOut: () => dispatch({ type: 'SIGN_OUT' }),
-      signUp: async data => {
-        // In a production app, we need to send user data to server and get a token
-        // We will also need to handle errors if sign up failed
-        // After getting token, we need to persist the token using `SecureStore`
-        // In the example, we'll use a dummy token
-
-        dispatch({ type: 'SIGN_IN', token: 'dummy-auth-token' });
+      signOut: () => {
+        console.log("Deconnexion");
+        setError('');
+        dispatch({ type: 'SIGN_OUT' })
       },
+      error,
     }),
-    []
+    [error]
   );
-    
-    return(
+  
+  return(
+    <>
       <AuthContext.Provider value={authContext}>
-        <NavigationContainer>
+        <QuizContext.Provider value={useQuiz()}>
+          <NavigationContainer>
             <Stack.Navigator
-            screenOptions={{
+              screenOptions={{
               headerShown: false
             }}>
               {state.userToken == null ? (
-                <>
-                  <Stack.Screen
-                    name="Login"
-                    component={Login}
-                  />
-                </>
+                <Stack.Screen
+                  name="Login"
+                  component={Login}
+                  options={{
+                    title: 'Sign in',
+                    // When logging out, a pop animation feels intuitive
+                    // You can remove this if you want the default 'push' animation
+                    animationTypeForReplace: state.isSignout ? 'pop' : 'push',
+                  }}
+                />
               ) : (
                 <>
                   <Stack.Screen
@@ -122,19 +150,15 @@ export default function App({navigation}) {
                     component={Accueil}
                   />
                   <Stack.Screen
-                    name="Test"
-                    component={Test}
-                  />
-                  <Stack.Screen
                     name="Quiz"
                     component={Quiz}
                   />
                 </>
               )}
-          </Stack.Navigator>
-        </NavigationContainer>
+            </Stack.Navigator>
+          </NavigationContainer>
+        </QuizContext.Provider>
       </AuthContext.Provider>
-      //<Navigator/ >
-    );
-    
+    </>
+    )
 };
