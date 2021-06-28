@@ -1,8 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Sequelize = require('sequelize');
-const db = require('../config/database');
-const Users = require('../models/Users');
+const Users = require('../models/usersModel');
 
 //Bibliothèque pour la gestion de token
 const jwt = require('jsonwebtoken');
@@ -13,8 +11,7 @@ const crypto = require('crypto');
 //Get login
 router.post('/', (req,res) => {
 
-    const id = req.body.id;
-    const pw = req.body.pw;
+    const {id,pw} = req.body;
     
     //Si aucune information n'a été tapé
     if (typeof id === 'undefined' || typeof pw === 'undefined'){

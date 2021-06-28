@@ -1,6 +1,6 @@
 import React from 'react';
-import io from 'socket.io-client';
-import {localhost} from '../../config/host';
+
+import {socket} from '../../config/socket';
 
 export const QuizContext = React.createContext();
 
@@ -46,45 +46,53 @@ export const useQuiz = () => {
     const [nbQuestion,setNbQuestion] = React.useState(1);
     const [reponseUser, setReponseUser] = React.useState([]);
 
-        //Socket
-
-    const socket = io('ws://' + localhost + ':3000/');
-
-    //Lors qu'on passe la question
-    socket.on('pass-question', () => {
-        setIdQuestion(idQuestion+1);
-        setAttendre(true);
-        //Envoyer les reponses au socket etc...
-
-        socket.emit('reponse',{idUser,nom,prenom,idQuiz,idQuestion,reponseUser,reponses_binaire});
-        console.log(`Passe une question sur le mobile : ${idQuestion}`);
-        setReponseUser([]);
-    });
-
-    //La question commence
-    socket.on('start-question', () => {
-
-        //Les chargements disparaissent
-        setLoading(false);
-        setAttendre(false);
-
-        console.log("Mobile : question lancé");
-    });
     
-    socket.on('stop-quiz',() => {
-        console.log("Mobile : quiz stoppé");
-        setTimer(0);
-        socket.emit('stop-quiz-mobile');
-    });
 
-    socket.on('pause',() => {
-        console.log("Pause");
-        clearInterval(intervalTimer);
-    });
-    
-    socket.on('userDisconnect', () => {
-        socket.leave(idGroupe);
-    })
+   React.useEffect(
+       () => {
+            //Lors qu'on passe la question
+        socket.on('pass-question', () => {
+            
+            setAttendre(true);
+
+            setIdQuestion(prevId => prevId + 1);
+            setProgress(1);
+            clearInterval(intervalTimer);
+
+            //Envoyer les reponses au socket etc...
+            socket.emit('reponse',{idUser,nom,prenom,idQuiz,idQuestion,points,reponseUser,reponses,reponses_binaire});
+            console.log(`Passe une question`);
+            
+            setReponseUser([]);
+        });
+
+        //La question commence
+        socket.on('start-question', () => {
+
+            //Les chargements disparaissent
+            setLoading(false);
+            setAttendre(false);
+
+            console.log("Mobile : question lancé");
+        });
+        
+        socket.on('stop-quiz',() => {
+            console.log("Mobile : quiz stoppé");
+            setTimer(10);
+            socket.emit('stop-quiz-mobile');
+        });
+
+        socket.on('pause',() => {
+            console.log("Pause");
+            clearInterval(intervalTimer);
+        });
+        
+        socket.on('userDisconnect', () => {
+            socket.leave(idGroupe);
+        })
+       },
+       []
+   );
 
     return {
         idUser,

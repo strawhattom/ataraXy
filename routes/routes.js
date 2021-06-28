@@ -73,6 +73,18 @@ io.on('connection', (socket) => {
     //Recois une réponse d'un utilisateur
     socket.on('reponse',(data) => {
         console.log(data);
+        // fetch('http://192.168.1.11:3000/reponse',{
+        //     method:'POST',
+        //     headers: {
+        //         'Accept': 'application/json',
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify(data)
+        // }).then((response) => {
+        //     response.json();
+        // }).then(json => {
+        //     console.log(json);
+        // });
         io.to('admin').emit('add-reponse',data);
         console.log("Envoie des réponses à l'admin...")
     });
@@ -97,7 +109,7 @@ app.use('/quiz',require('./quiz'));
 app.use('/questions',require('./questions'));
 
 //Redirige toutes les requêtes /reponses au fichier en question
-app.use('/reponses',require('../routes/reponses'));
+app.use('/reponses',require('./reponses'));
 
 // Starting our server.
 server.listen(port, () => {

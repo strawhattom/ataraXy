@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import jwt_decode from 'jwt-decode';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
 import {AuthContext} from "../context/authContext";
 

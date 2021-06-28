@@ -57,35 +57,17 @@ const Quiz = (props) => {
 
     var btnReponses = [];
 
-    const pressReponse = (i) => {
+    const pressReponse = (reponse) => {
 
         //Si l'utilisateur à déjà cliquer sur la réponse, on l'enlève
-        if (reponseUser.includes(reponses[i])){
+        if (reponseUser.includes(reponse)){
             const temp = reponseUser;
-            setReponseUser(temp.filter(val => val != reponses[i]));
+            setReponseUser(temp.filter(val => val != reponse));
         } else {
-            setReponseUser([...reponseUser,reponses[i]]);
+            setReponseUser([...reponseUser,reponse]);
         }
-        
     }
 
-    //Créer les boutons en fonctions du nombre de réponses et les stockes dans le tableau btnReponses
-    for (let i = 0;i<reponses.length;i++){
-        btnReponses.push(
-            <TouchableOpacity 
-            key={i}
-            val={reponses_binaire[i]}
-            selected={false}
-            onPress={() => pressReponse(i)}>
-                <View style={[styles.button,styles.quiz]} > 
-                    <Text style={styles.reponse}>
-                        {reponses[i]}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-        )
-    }
-    
     //Lors de l'appuie, revien à la page Accueil
     const pressRetour = () => {
         props.navigation.navigate('Accueil');
@@ -100,18 +82,16 @@ const Quiz = (props) => {
         inputRange: [0, 1],
         outputRange: ['0deg', '360deg']
     });
-    
-
 
     //Obtient les réponses dans un tableau en séparant la chaîne à chaque \n
     const recup_reponse = (chaine) => {
         var tempReponses = chaine.split("\\n");
         tempReponses.pop();
         return tempReponses;
-    }
-    
+    };
+
+    //Obtient un tableau contenant : la question et les réponses en fonction du QCM.
     const atar = (qcm) => {
-        //Fetch un tableau contenant : la question et les réponses en fonction du QCM.
         fetch(`http://127.0.0.1/php/WATARAXY/PHP/AutoQCMMobile.php?qcm=${qcm}`,{
             method:'GET',
             headers: {
@@ -206,6 +186,7 @@ const Quiz = (props) => {
             }
             
             socket.on('stop-quiz-mobile', () => {
+                console.log("Quiz s'est soudainement arrêté");
                 props.navigation.navigate('Accueil');
             });
             
@@ -245,13 +226,12 @@ const Quiz = (props) => {
             if (attendre == false && isLoading == false) {
                 setIntervalTimer( 
                     setInterval(() => {
-                        if (timer != 0) {
+                        if (timer >= 0) {
                             //Baisse le compteur de temps
-                            setTimer(timer-1);
+                            setTimer(prevTimer => prevTimer - 1);
                             //Met à jours la barre de progression
                             
                         } else {
-                            setProgress(1);
                             clearInterval(intervalTimer);
                             return;
                         }
@@ -264,11 +244,44 @@ const Quiz = (props) => {
 
     React.useEffect(
         () => {
-            console.log("Timer : " + timer);
             setProgress(timer/temps);
         },
         [timer]
     );
+
+    //Créer les boutons en fonctions du nombre de réponses et les stockes dans le tableau btnReponses
+    const ReponsesLayout = ({
+        values,
+        reponseUser,
+        binaire,
+        setReponseUser,
+    }) => (
+        <View style={{flex:1}}>
+            <View style={[styles.containerReponses]}>
+
+                { values.map((reponse) => (
+                    <TouchableOpacity
+                     key={reponse}
+                     onPress={() => setReponseUser(reponse)}
+                     style={[
+                        styles.button,
+                        reponseUser.includes(reponse) && styles.quizSelected,
+                        ]}
+                    >
+                        <Text style={
+                            [styles.reponse,
+                            reponseUser.includes(reponse) && styles.quizSelectedText,
+                            ]}
+                        >
+                            {reponse}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+    ); 
+
+    //Affichage
 
     if (isLoading) {
         return (
@@ -295,13 +308,11 @@ const Quiz = (props) => {
                     {blague}
                 </Text>
             </View>
-            <TouchableOpacity style={styles.widthBtn} onPress={pressRetour}>
-                    <View style={[styles.button,styles.retour]} > 
-                        <Text>
-                            {"Retour"}
-                        </Text>
-                    </View>
-                </TouchableOpacity>
+            <TouchableOpacity style={styles.width} onPress={pressRetour}>
+                <Text style={[styles.button,styles.retour]}>
+                    {"Retour"}
+                </Text>
+            </TouchableOpacity>
         </SafeAreaView>
     );
     } else if (attendre) {
@@ -357,7 +368,6 @@ const Quiz = (props) => {
                     source={img}/>
                 }
                 
-    
                 {/* {typeQuestion == 'Ataraxienne' &&
                     <Katex
                         expression={expression}
@@ -375,9 +385,12 @@ const Quiz = (props) => {
             </View>
 
             {/* Réponses */}
-            <View style={[styles.containerReponses,styles.widthBtn]}>
-                {btnReponses}
-            </View>
+            <ReponsesLayout
+            values={reponses}
+            binaire={reponses_binaire}
+            reponseUser={reponseUser}
+            setReponseUser={pressReponse}
+            ></ReponsesLayout>
     
         </SafeAreaView>
         
@@ -428,7 +441,10 @@ const styles = StyleSheet.create({
     },
     containerReponses:{
         margin:10,
-        height:"10%",
+        alignItems: 'center',
+        justifyContent:'center',
+        flexDirection: "row",
+        flexWrap: "wrap",
     },
     progressBar:{
         margin:10,
@@ -436,10 +452,7 @@ const styles = StyleSheet.create({
         height:7,
     },
     width:{
-        width:"80%",
-    },
-    widthBtn:{
-        width:"40%",
+        width:"90%",
     },
     retour:{
         backgroundColor:"salmon",
@@ -455,28 +468,31 @@ const styles = StyleSheet.create({
         fontWeight:'bold',
     },
     reponse:{
-        textAlign:'center',
+        color: "black",
         fontSize:16,
     },
     questionImg:{
         margin:10,
-        height:128,
-        width:128,
+        minHeight:128,
+        minWidth:128,
     },
     button:{
-        margin:7,
-        height:40,
-        backgroundColor:"lightgray",
-        color:"black",
-        borderRadius:40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    quiz:{
-        backgroundColor:"#ffe3c0",
+        margin:16,
+        paddingHorizontal: 8,
+        paddingVertical: 10,
+        borderRadius: 8,
+        backgroundColor: "oldlace",
+        alignSelf: "center",
+        marginHorizontal: "1%",
+        marginBottom: 6,
+        minWidth: "45%",
+        textAlign: "center",
     },
     quizSelected:{
-        backgroundColor:"#ffcb8a",
+        backgroundColor: "slateblue",
+    },
+    quizSelectedText:{
+        color: "white",
     },
     logo:{
         margin:20,

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
-const Quiz = require('../models/Quiz');
+const Quiz = require('../models/quizModel');
 
 //On veut voir tous les quiz
 router.get('/', (req, res) => {
