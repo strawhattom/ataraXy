@@ -79,7 +79,7 @@ export const useQuiz = () => {
         socket.on('stop-quiz',() => {
             console.log("Mobile : quiz stoppé");
             setTimer(10);
-            socket.emit('stop-quiz-mobile');
+            clearInterval(intervalTimer);
         });
 
         socket.on('pause',() => {
@@ -90,8 +90,19 @@ export const useQuiz = () => {
         socket.on('userDisconnect', () => {
             socket.leave(idGroupe);
         })
+
+        //Ne pas oublier de les détruire quand l'affichage se met à jours 
+        return () => {
+            // on enlève tous les listener
+            socket.off("userDisconnect");
+            socket.off("pause");
+            socket.off("stop-quiz");
+            socket.off("start-question");
+            socket.off("pass-question");
+          };
+
        },
-       []
+       [socket,idUser,nom,prenom,idQuiz,idQuestion,points,reponseUser,reponses,reponses_binaire]
    );
 
     return {

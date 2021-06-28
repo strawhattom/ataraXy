@@ -185,8 +185,8 @@ const Quiz = (props) => {
                 console.log(etatQuestion);
             }
             
-            socket.on('stop-quiz-mobile', () => {
-                console.log("Quiz s'est soudainement arrêté");
+            socket.on('stop-quiz', (message) => {
+                console.log(message);
                 props.navigation.navigate('Accueil');
             });
             
@@ -205,6 +205,10 @@ const Quiz = (props) => {
                 setNbQuestion(responseJSON.length);
             })
             .catch(err => console.err(err));
+            
+            return () => {
+                socket.off('stop-quiz');
+            };
         },
         []
     )
@@ -237,6 +241,9 @@ const Quiz = (props) => {
                         }
                     },1000)
                 )
+            }
+            return () => {
+                clearInterval(intervalTimer);
             }
         },
         [attendre,isLoading]

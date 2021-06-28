@@ -6,8 +6,9 @@ const Resultats = require('../models/resultatsModel');
 router.post('/', (req, res) => {
     //Mettre une réponse dans la BDD
         //{idUser,nom,prenom,idQuiz,idQuestion,reponseUser,reponses,reponses_binaire}
-        const {idUser,nom,prenom,idQuiz,idQuestion,reponseUser,reponses,reponses_binaire} = req.body;
-        let i = 0;
+        const {idUser,nom,prenom,idQuiz,idQuestion,reponseUser,reponses,reponses_binaire} = JSON.parse(req.body.data);
+
+        // console.log(req.body.data);
 
         //Tableau de réponse correcte
         let tabReponseCorrecte = [];
@@ -29,7 +30,9 @@ router.post('/', (req, res) => {
             reussit = false;
         }
 
-        res.send(reussit);
+        const data = {idUser,nom,prenom,idQuiz,idQuestion,reponseUser,reponses,reponses_binaire,reussit};
+
+        res.send(data);
     }
 );
 
