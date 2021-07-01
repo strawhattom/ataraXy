@@ -1,5 +1,4 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const http = require('http');
 const sequelize = require('../config/database');
@@ -20,7 +19,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
 
-//Test DB
+//Connexion BDD
 sequelize.authenticate()
     .then(() => console.log("Base de données connectée..."))
     .catch((err) => console.log("Erreur : " + err));
@@ -36,8 +35,9 @@ io.on('connection', (socket) => {
         console.log("Un administrateur est sur la page d'animation de quiz");
     })
 
-    socket.on('joinRoom', ({PRENOM, GROUPE}) => {
+    socket.on('joinRoom', ({PRENOM, NOM, GROUPE}) => {
         console.log(`${PRENOM} joined group ${GROUPE}`);
+        io.to('admin').emit('user-join', `${PRENOM} ${NOM} vient de rejoindre le groupe ${GROUPE}`)
     })
 
     //Ajoute un mot clé d'evenement "lancer", on pourra emettre un message avec comme mot clé "lancer" depuis le web.
@@ -64,6 +64,12 @@ io.on('connection', (socket) => {
         io.emit('pause');
     })
 
+    //Pause un quiz
+    socket.on('unpause-question',(message) => {
+        console.log(message);
+        io.emit('unpause');
+    })
+
     //Passe un quiz
     socket.on('pass', (data) => {
         console.log(`Quiz ${data.idquiz} du groupe ${data.idgroupe}, passe à une nouvelle question (${data.idquestion})`);
@@ -84,7 +90,7 @@ io.on('connection', (socket) => {
 
 //Chemin par defaut
 app.get('/', (req, res) => {
-    res.send("Node activé");
+    res.send("Serveur node actif");
 });
 
 //Route vers l'authentification -> localhost:3000/auth/...

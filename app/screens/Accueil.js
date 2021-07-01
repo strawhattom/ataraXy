@@ -1,7 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, Alert, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
+import { StyleSheet, Text, ActivityIndicator, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
 import {AuthContext} from "../context/authContext";
-import jwt_decode from "jwt-decode";
 import * as SecureStore from 'expo-secure-store';
 import {localhost} from '../../config/host';
 import { useQuizContext } from '../context/quizContext';
@@ -13,32 +12,48 @@ function Accueil(props) {
 
     React.useEffect(
         () => {
-            const token = sessionStorage.getItem('token');
-            if (token){
-                const decoded = jwt_decode(token);
+            // const token = sessionStorage.getItem('token');
+            async function fetchToken(){
 
-                //Vérifie le token obtenue
                 try {
-                    setIdUser(decoded.id);
-                    setIdGroupe(decoded.ID_GROUPE);
-                    setNom(decoded.NOM);
-                    setPrenom(decoded.PRENOM);
-                    
-                    socket.emit('joinRoom',{PRENOM:decoded.PRENOM,GROUPE:decoded.ID_GROUPE});
+                    //Récupère le token en verificant sa validité
+                    const token = await SecureStore.getItemAsync('token');
+                    fetch('http://'+localhost+':3000/auth/validate',{
+                        method:'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            token
+                        })
+                    }).then(response => response.json())
+                    .then(responseJSON => {
+                        const decoded = responseJSON;
 
-                } catch(e) {
+                        if (!decoded){
+                            signOut(false); //Deconnecte sans demandé la confirmation
+                        } else {
+                            setIdUser(decoded.id);
+                            setIdGroupe(decoded.ID_GROUPE);
+                            setNom(decoded.NOM);
+                            setPrenom(decoded.PRENOM);
+                            socket.emit('joinRoom',{PRENOM:decoded.PRENOM, NOM:decoded.NOM, GROUPE:decoded.ID_GROUPE});
+                        }
+                        
+                    });
+
+                } catch (e){
                     console.error(e);
                     signOut();
                 }
-                
-            }
+            };
+
+            fetchToken();
+
         },
         []
     )
-
-    
-
-    
     
     //Appuie sur "Mode quiz"
     const pressQuiz = () => {
@@ -54,9 +69,12 @@ function Accueil(props) {
                 if (responseJSON !== false){
                     //Si on a une réponse mais qu'on a pas de résultat
                     if (responseJSON.length === 0){
+
                         console.log("Pas de quiz disponible qui sont en cours");
                         return;
+
                     } else {
+
                         //Trie les quiz du plus récent jusqu'au plus vieux
                         responseJSON.sort(function(a,b) {
                             return new Date(b.DATE_QUIZ) - new Date(a.DATE_QUIZ);
@@ -64,6 +82,7 @@ function Accueil(props) {
                         setIdQuiz(responseJSON[0].ID_QUIZ);
                         setEtatQuestion(responseJSON[0].ETAT_QUESTION);
                         props.navigation.navigate('Quiz'); //Prend le quiz le plus récent
+
                     }
                 } else {
                     console.log("Retourne false via le serveur");
@@ -73,7 +92,6 @@ function Accueil(props) {
         });
             
     };
-
 
     //Si c'est M. Hébert (à changer pour les futurs admins)
     if (idUser == 19){
@@ -109,7 +127,7 @@ function Accueil(props) {
                     </TouchableOpacity>
                     
                     <TouchableOpacity onPress={pressQuiz}>
-                        <View style={[styles.button,styles.quizz]} > 
+                        <View style={[styles.button,styles.quiz]} > 
                             <Text>
                                 {"Mode quiz"}
                             </Text>
@@ -167,7 +185,7 @@ function Accueil(props) {
                 <View style={[styles.containerButton,styles.width]}>
                     
                     <TouchableOpacity onPress={pressQuiz}>
-                        <View style={[styles.button,styles.quizz]} > 
+                        <View style={[styles.button,styles.quiz]} > 
                             <Text>
                                 {"Mode quiz"}
                             </Text>
@@ -252,8 +270,17 @@ const styles = StyleSheet.create({
         borderRadius:40,
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.20,
+        shadowRadius: 1.41,
+
+        elevation: 2,
     },
-    quizz:{
+    quiz:{
         backgroundColor:"#a097ff",
     },
     faireqcm:{

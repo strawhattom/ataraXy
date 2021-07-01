@@ -1,4 +1,10 @@
 import React from 'react';
+
+//Désactive la box de warning
+import { Alert, LogBox } from 'react-native';
+LogBox.ignoreLogs(['It']);
+LogBox.ignoreAllLogs();//Ignore all log notifications
+
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SecureStore from 'expo-secure-store';
@@ -10,12 +16,15 @@ import Quiz from "./app/screens/Quiz";
 
 //Contextes
 import {AuthContext} from "./app/context/authContext";
-import {SocketContext,useSocket} from "./app/context/socketContext";
 import {QuizContext, useQuiz} from './app/context/quizContext';
 
 import {localhost} from './config/host';
 
 const Stack = createStackNavigator();
+
+async function setToken(key,value){
+  await SecureStore.setItemAsync(key,value);
+}
 
 export default function App() {
 
@@ -38,8 +47,6 @@ export default function App() {
             userToken: action.token,
           };
         case 'SIGN_OUT':
-          
-          sessionStorage.removeItem('token');
           return {
             ...prevState,
             isSignout: true,
@@ -58,19 +65,12 @@ export default function App() {
     // Fetch the token from storage then navigate to our appropriate place
     const bootstrapAsync = async () => {
       let userToken;
-
       try {
-        //userToken = await SecureStore.getItemAsync('token');
-        userToken = sessionStorage.getItem('token');
+        userToken = await SecureStore.getItemAsync('token');
       } catch (e) {
         // Restoring token failed
         console.log("Token restoring failed : " + e);
       }
-
-      // After restoring token, we may need to validate it in production apps
-      
-      // This will switch to the App screen or Auth screen and this loading
-      // screen will be unmounted and thrown away.
       dispatch({ type: 'RESTORE_TOKEN', token: userToken });
     };
 
@@ -80,9 +80,6 @@ export default function App() {
   const authContext = React.useMemo(
     () => ({
       signIn: async ({id,pw}) => {
-        // In a production app, we need to send some data (usually username, password) to server and get a token
-        // We will also need to handle errors if sign in failed
-        // After getting token, we need to persist the token using `SecureStore`
         
         fetch('http://'+localhost+':3000/auth',{
             method:'POST',
@@ -97,14 +94,13 @@ export default function App() {
         }).then((response) => response.json())
             .then((responseJSON) => {
                 if (responseJSON !== false){
-                  //SecureStore.setItemAsync('token',responseJSON)
-                  //.catch(err => console.log("Error storing token : " + err));
-                  sessionStorage.setItem('token',responseJSON)
+
+                  //Stock le token dans un stockage
+                  setToken('token',responseJSON);
                   console.log("Connexion");
                   dispatch({ type: 'SIGN_IN', token: responseJSON });
                 } else {
                   setError("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
-                  console.log("Une erreur est survenue, l'identifiant et/ou le mot de passe sont incorrects");
                 }
             }).catch((error)=>{
                 console.log("Erreur : "+ error);
@@ -112,10 +108,38 @@ export default function App() {
 
         
       },
-      signOut: () => {
-        console.log("Deconnexion");
-        setError('');
-        dispatch({ type: 'SIGN_OUT' })
+      signOut: async (alert = true) => {
+        if (alert){
+          Alert.alert(
+            'Confirmation pour la déconnexion',
+            'Vous êtes sur le point de vous déconnecter, êtes-vous sûr ?',
+            [
+              {
+                text:'Annuler',
+                onPress: () => {
+                  return;
+                },
+                style: "cancel"
+              },
+              {
+                text:'Confimer',
+                onPress: async () => {
+                  console.log("Deconnexion");
+                  await SecureStore.deleteItemAsync('token');
+                  //sessionStorage.removeItem('token');
+                  setError('');
+                  dispatch({ type: 'SIGN_OUT' })
+                }
+              }
+            ]
+          )
+        } else {
+          console.log("Deconnexion");
+          await SecureStore.deleteItemAsync('token');
+          //sessionStorage.removeItem('token');
+          setError('');
+          dispatch({ type: 'SIGN_OUT' })
+        }
       },
       error,
     }),

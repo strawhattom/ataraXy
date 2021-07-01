@@ -29,6 +29,7 @@ const Quiz = (props) => {
         blague,
         blagues,
         wait,
+        waitMsg,
         isLoading,
         socket,
         setIdUser,
@@ -148,8 +149,7 @@ const Quiz = (props) => {
                         let img = '';
                         //Image
                         if (question.TYPE == 'Image'){
-                            const {data} = question.IMG_SRC;
-                            img = new Buffer.from(data).toString('ascii');
+                            img = question.IMG_SRC;
                         }
                         setImgSrc(img);
                     }
@@ -163,6 +163,7 @@ const Quiz = (props) => {
     //useEffect est lancé 1 fois à la chargement de la page
     //Dans le 2ème argument (un tableau) si la state d'un des hook changent, useEffect est appelé directement.
     React.useEffect(() => {
+            setLoading(true);
 
             if (etatQuestion == 1) {
                 //Pour faire une boucle, ajouter le timing dans le loop
@@ -259,11 +260,7 @@ const Quiz = (props) => {
     );
 
     //Créer les boutons en fonctions du nombre de réponses et les stockes dans le tableau btnReponses
-    const ReponsesLayout = ({
-        values,
-        reponseUser,
-        setReponseUser,
-    }) => (
+    const ReponsesLayout = ({values,reponseUser,setReponseUser}) => (
         <View style={{flex:1}}>
             <View style={[styles.containerReponses]}>
 
@@ -328,9 +325,25 @@ const Quiz = (props) => {
             <View style={[styles.container,{
                 justifyContent:'center',
             }]}>
+                <TouchableOpacity 
+                    style={[
+                        styles.containerLogo,
+                        {
+                            position:'absolute',
+                            left:'2%',
+                            top:'2%',
+                        }
+                     ]} 
+                    onPress={() => {pressRetour()}}>
+                        <Image 
+                        fadeDuration={1500}
+                        style={styles.tinylogo}
+                        source={require('../assets/icon.png')
+                        }/>
+                </TouchableOpacity>
                 <Text
                 style={styles.question}>
-                    {"Prochaine question..."}
+                    {waitMsg}
                 </Text>
             </View>
         )
@@ -339,8 +352,8 @@ const Quiz = (props) => {
         <SafeAreaView style={styles.container}>
             {/* Logo dans le coin */}
             <TouchableOpacity 
-                style={styles.containerLogo} 
-                onPress={() => {props.navigation.navigate('Accueil')}}>
+                style={[styles.containerLogo]} 
+                onPress={() => {pressRetour()}}>
                     <Image 
                     fadeDuration={1500}
                     style={styles.tinylogo}
@@ -371,9 +384,11 @@ const Quiz = (props) => {
     
                 {typeQuestion == 'Image' &&
                     <Image 
-                    fadeDuration={1500}
+                    fadeDuration={700}
                     style={styles.questionImg}
-                    source={img}/>
+                    source={{
+                        uri:img
+                    }}/>
                 }
                 
                 {/* {typeQuestion == 'Ataraxienne' &&
@@ -476,6 +491,7 @@ const styles = StyleSheet.create({
         fontWeight:'bold',
     },
     reponse:{
+        textAlign:'center',
         color: "black",
         fontSize:16,
     },
@@ -489,15 +505,23 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         paddingVertical: 10,
         borderRadius: 8,
-        backgroundColor: "oldlace",
+        backgroundColor: "white",
         alignSelf: "center",
         marginHorizontal: "1%",
         marginBottom: 6,
         minWidth: "45%",
         textAlign: "center",
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.20,
+        shadowRadius: 1.41,
+        elevation: 2,
     },
     quizSelected:{
-        backgroundColor: "slateblue",
+        backgroundColor: "#847bff",
     },
     quizSelectedText:{
         color: "white",

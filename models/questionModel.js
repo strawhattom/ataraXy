@@ -29,6 +29,14 @@ const Questions = db.define('quiz_data',{
     IMG_SRC:{
         type:Sequelize.BLOB('long'),
         allowNull: true,
+        get() {
+            const src = this.getDataValue('IMG_SRC');
+            if (src === null){
+                return null;
+            } else {
+                return this.getDataValue('IMG_SRC').toString('ascii');
+            }
+        },
     },
 });
 

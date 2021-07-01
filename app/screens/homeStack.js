@@ -1,9 +1,9 @@
 import {  createAppContainer } from 'react-navigation';
 import { createStackNavigator } from 'react-navigation-stack';
-import Login from "../app/screens/Login";
-import Accueil from "../app/screens/Accueil";
-import Test from "../app/screens/Test";
-import Quiz from "../app/screens/Quiz";
+import Login from "./Login";
+import Accueil from "./Accueil";
+import Test from "./Test";
+import Quiz from "./Quiz";
 
 //pile des screens
 const screens = {
@@ -23,6 +23,6 @@ const screens = {
 
 const HomeStack = createStackNavigator(screens,{
     headerMode: 'none',
-  });
+});
 
 export default createAppContainer(HomeStack);

@@ -28,7 +28,7 @@
     "web": {
       "favicon": "./app/assets/favicon.png"
     },
-    "description": "Une application mobile de la plateforme ataraXy permettant à des étudiants d'effectuer des quizz ainsi que d'autres fonctionnalités du site source.",
+    "description": "Une application mobile de la plateforme ataraXy permettant à des étudiants d'effectuer des quiz paramétrés en amont par un le professeur.",
     "githubUrl": "https://github.com/tomx93/ataraXy"
   }
 }

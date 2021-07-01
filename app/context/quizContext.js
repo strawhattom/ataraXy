@@ -14,6 +14,7 @@ export const useQuiz = () => {
     //Authent
     const [error,setError] = React.useState('');            //En cas d'erreur
     const [wait,setWait] = React.useState(false); //wait la prochaine question
+    const [waitMsg, setWaitMsg] = React.useState("Prochaine question...");
     const [isLoading, setLoading] = React.useState(true); //Attente que le quiz se lance
 
     //Liste des blagues
@@ -72,6 +73,7 @@ export const useQuiz = () => {
             //Les chargements disparaissent
             setLoading(false);
             setWait(false);
+            setWaitMsg("Prochaine question...");
 
             console.log("Mobile : question lancé");
         });
@@ -81,8 +83,11 @@ export const useQuiz = () => {
             socket.emit('reponse',{idUser,nom,prenom,idQuiz,idQuestion,points,reponseUser,reponses,reponses_binaire});
             socket.emit('stop-quiz');
             //Envoie de la dernière réponse
-
+            setIdQuestion(1);
+            setReponseUser([]);
             setTimer(10);
+            setWait(true);
+            setWaitMsg("Fin du quiz");
             clearInterval(intervalTimer);
         });
 
@@ -90,6 +95,27 @@ export const useQuiz = () => {
             console.log("Pause");
             clearInterval(intervalTimer);
         });
+
+        socket.on('unpause',() => {
+            if (wait == false && isLoading == false) {
+                setIntervalTimer( 
+                    setInterval(() => {
+                        if (timer >= 0) {
+                            //Baisse le compteur de temps
+                            setTimer(prevTimer => prevTimer - 1);
+                            //Met à jours la barre de progression
+                            
+                        } else {
+                            clearInterval(intervalTimer);
+                            return;
+                        }
+                    },1000)
+                )
+            }
+            return () => {
+                clearInterval(intervalTimer);
+            }
+        })
         
         socket.on('userDisconnect', () => {
             socket.leave(idGroupe);
@@ -100,13 +126,14 @@ export const useQuiz = () => {
             // on enlève tous les listener
             socket.off("userDisconnect");
             socket.off("pause");
+            socket.off("unpause");
             socket.off("stop-quiz");
             socket.off("start-question");
             socket.off("pass-question");
           };
 
        },
-       [socket,idUser,nom,prenom,idQuiz,idQuestion,points,reponseUser,reponses,reponses_binaire]
+       [waitMsg,wait,isLoading,socket,idUser,nom,prenom,idQuiz,idQuestion,points,reponseUser,reponses,reponses_binaire]
    );
 
     return {
@@ -135,6 +162,8 @@ export const useQuiz = () => {
         wait,
         isLoading,
         socket,
+        waitMsg,
+        setWaitMsg,
         setIdUser,
         setIdGroupe,
         setIdQuestion,

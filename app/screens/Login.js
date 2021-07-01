@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { ActivityIndicator, StyleSheet, Text, TextInput, View, Image, TouchableOpacity} from 'react-native';
-import {AuthContext} from "../context/authContext";
+import { AuthContext } from "../context/authContext";
 
 function Login() {
     
@@ -18,7 +18,7 @@ function Login() {
         return(<ActivityIndicator
         style={styles.container}
         size="large" 
-        color="#000000" />);
+        color="#6AE6FF" />);
 
     } else {
         return (
@@ -72,14 +72,9 @@ function Login() {
             </View>
         );
     }
-//}
-
-    
+//} 
 };
 
-Login.protoTypes = {
-    setToken:PropTypes.func.isRequired
-}
 
 const styles = StyleSheet.create({
     container: {
@@ -119,6 +114,14 @@ const styles = StyleSheet.create({
         borderRadius:40,
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.20,
+        shadowRadius: 1.41,
+        elevation: 2,
     },
     login:{
         backgroundColor:"#beeaff",

@@ -38,7 +38,7 @@ router.post('/', (req,res) => {
                 //de la forme (s'il est décodé):
                 //{id:idUsers,ID_GROUPE:idDuGroupe,NOM:nom,PRENOM:prenom}
                 const token = jwt.sign(response.dataValues,
-                'supersecret'
+                'ataraXyVerify'
                 ,
                 {
                     expiresIn:900,
@@ -52,6 +52,19 @@ router.post('/', (req,res) => {
 
 //Valide le token
 router.post('/validate',(req,res) => {
+
+    const {token} = req.body;
+    if (token) {
+        var valid;
+        try {
+            valid = jwt.verify(token, 'ataraXyVerify');
+        } catch (e) {
+            valid = false;
+        }
+        res.send(JSON.stringify(valid));
+    } else {
+        res.send(false);
+    }
 
 });
 
