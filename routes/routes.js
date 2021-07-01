@@ -55,6 +55,7 @@ io.on('connection', (socket) => {
     socket.on('stop', (message) => {
         console.log(message);
         io.emit('stop-quiz');
+        socket.emit('stop-quiz');
     });
 
     //Pause un quiz
@@ -72,8 +73,6 @@ io.on('connection', (socket) => {
 
     //Recois une réponse d'un utilisateur
     socket.on('reponse',(data) => {
-        console.log(data);
-
         io.to('admin').emit('add-reponse',data);
         console.log("Envoie des réponses à l'admin...")
     });
@@ -89,16 +88,16 @@ app.get('/', (req, res) => {
 });
 
 //Route vers l'authentification -> localhost:3000/auth/...
-app.use('/auth',require('./auth'));
+app.use('/auth', require('./auth'));
 
 //Route vers le quiz -> localhost:3000/quiz/...
-app.use('/quiz',require('./quiz'));
+app.use('/quiz', require('./quiz'));
 
 //Route vers les questions -> localhost:3000/questions/...
-app.use('/questions',require('./questions'));
+app.use('/questions', require('./questions'));
 
 //Redirige toutes les requêtes /reponses au fichier en question
-app.use('/reponses',require('./reponses'));
+app.use('/reponses', require('./reponses'));
 
 // Starting our server.
 server.listen(port, () => {

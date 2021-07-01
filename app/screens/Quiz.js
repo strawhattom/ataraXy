@@ -28,7 +28,7 @@ const Quiz = (props) => {
         reponseUser,
         blague,
         blagues,
-        attendre,
+        wait,
         isLoading,
         socket,
         setIdUser,
@@ -51,11 +51,9 @@ const Quiz = (props) => {
         setNbQuestion,
         setReponseUser,
         setBlague,
-        setAttendre,
+        setWait,
         setLoading,
     } = useQuizContext();
-
-    var btnReponses = [];
 
     const pressReponse = (reponse) => {
 
@@ -185,8 +183,8 @@ const Quiz = (props) => {
                 console.log(etatQuestion);
             }
             
-            socket.on('stop-quiz', (message) => {
-                console.log(message);
+            socket.on('stop-quiz', () => {
+                console.log("Le quiz s'est arrêté, redirection vers la page d'accueil");
                 props.navigation.navigate('Accueil');
             });
             
@@ -223,11 +221,11 @@ const Quiz = (props) => {
         [idQuestion]
     );
 
-    //Si la state attendre change
+    //Si la state wait change
     React.useEffect(
         () => {
 
-            if (attendre == false && isLoading == false) {
+            if (wait == false && isLoading == false) {
                 setIntervalTimer( 
                     setInterval(() => {
                         if (timer >= 0) {
@@ -246,11 +244,15 @@ const Quiz = (props) => {
                 clearInterval(intervalTimer);
             }
         },
-        [attendre,isLoading]
+        [wait,isLoading]
     );
 
     React.useEffect(
         () => {
+            if (timer <= 0){
+                setWait(true);
+                clearInterval(intervalTimer);
+            }
             setProgress(timer/temps);
         },
         [timer]
@@ -260,13 +262,12 @@ const Quiz = (props) => {
     const ReponsesLayout = ({
         values,
         reponseUser,
-        binaire,
         setReponseUser,
     }) => (
         <View style={{flex:1}}>
             <View style={[styles.containerReponses]}>
 
-                { values.map((reponse) => (
+                { values.map((reponse) => ( //Crée un bouton pour chaque réponse
                     <TouchableOpacity
                      key={reponse}
                      onPress={() => setReponseUser(reponse)}
@@ -322,7 +323,7 @@ const Quiz = (props) => {
             </TouchableOpacity>
         </SafeAreaView>
     );
-    } else if (attendre) {
+    } else if (wait) {
         return (
             <View style={[styles.container,{
                 justifyContent:'center',

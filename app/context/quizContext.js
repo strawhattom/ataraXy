@@ -13,7 +13,7 @@ export const useQuiz = () => {
 
     //Authent
     const [error,setError] = React.useState('');            //En cas d'erreur
-    const [attendre,setAttendre] = React.useState(false); //Attendre la prochaine question
+    const [wait,setWait] = React.useState(false); //wait la prochaine question
     const [isLoading, setLoading] = React.useState(true); //Attente que le quiz se lance
 
     //Liste des blagues
@@ -53,7 +53,7 @@ export const useQuiz = () => {
             //Lors qu'on passe la question
         socket.on('pass-question', () => {
             
-            setAttendre(true);
+            setWait(true);
 
             setIdQuestion(prevId => prevId + 1);
             setProgress(1);
@@ -71,13 +71,17 @@ export const useQuiz = () => {
 
             //Les chargements disparaissent
             setLoading(false);
-            setAttendre(false);
+            setWait(false);
 
             console.log("Mobile : question lancé");
         });
         
         socket.on('stop-quiz',() => {
-            console.log("Mobile : quiz stoppé");
+            console.log("Mobile : quiz stoppé, envoie des réponses.");
+            socket.emit('reponse',{idUser,nom,prenom,idQuiz,idQuestion,points,reponseUser,reponses,reponses_binaire});
+            socket.emit('stop-quiz');
+            //Envoie de la dernière réponse
+
             setTimer(10);
             clearInterval(intervalTimer);
         });
@@ -128,7 +132,7 @@ export const useQuiz = () => {
         blague,
         blagues,
         error,
-        attendre,
+        wait,
         isLoading,
         socket,
         setIdUser,
@@ -152,7 +156,7 @@ export const useQuiz = () => {
         setReponseUser,
         setBlague,
         setError,
-        setAttendre,
+        setWait,
         setLoading,
     }
     
