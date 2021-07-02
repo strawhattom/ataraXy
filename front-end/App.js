@@ -18,7 +18,7 @@ import Quiz from "./app/screens/Quiz";
 import {AuthContext} from "./app/context/authContext";
 import {QuizContext, useQuiz} from './app/context/quizContext';
 
-import {localhost} from './config/host';
+import {host} from './config/host';
 
 const Stack = createStackNavigator();
 
@@ -82,7 +82,7 @@ export default function App() {
     () => ({
       signIn: async ({id,pw}) => {
         
-        fetch('http://'+localhost+':3000/auth',{
+        fetch('http://'+host+':3000/auth',{
             method:'POST',
             headers: {
                 'Accept': 'application/json',

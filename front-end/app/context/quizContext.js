@@ -1,5 +1,5 @@
 import React from 'react';
-
+import { host }from '../../config/host';
 import {socket} from '../../config/socket';
 
 export const QuizContext = React.createContext();
@@ -47,9 +47,85 @@ export const useQuiz = () => {
     const [nbQuestion,setNbQuestion] = React.useState(1);
     const [reponseUser, setReponseUser] = React.useState([]);
 
-    
+    //Obtient les réponses dans un tableau en séparant la chaîne à chaque \n
+    const recup_reponse = (chaine) => {
+        var tempReponses = chaine.split("\\n");
+        tempReponses.pop();
+        return tempReponses;
+    };
 
-   React.useEffect(
+    //Obtient un tableau contenant : la question et les réponses en fonction du QCM.
+    const atar = (qcm) => {
+        fetch(`http://127.0.0.1/php/WATARAXY/PHP/AutoQCMMobile.php?qcm=${qcm}`,{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then(response => response.json())
+        .then(responseJSON => {
+            console.log(responseJSON)
+            //On a reçu une réponse positive
+            if (typeof responseJSON !== 'undefined' && responseJSON.message == true){
+                
+                let tempReponses = [];
+                setQuestion(responseJSON.question);
+                const reponses = responseJSON.reponses;
+                for (let i = 0;i<reponses.length;i++){
+                    tempReponses.push(reponses[i].tex);
+                }
+                setReponses(tempReponses);  
+            } else {
+                console.log("Réponse vide du serveur");
+            }
+        }).catch(err => console.log("Erreur obtention reponse : " + err));
+    };
+
+    //Par défaut on choisit la première question
+    const update = (id) => fetch('http://' + host + `:3000/questions/${idQuiz}/${id}`,{
+            method:'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        }).then((response) => response.json())
+        .then((responseJSON) => {
+
+            if (responseJSON !== false){
+                //Si on a une réponse mais qu'on a pas de résultat
+                if (responseJSON.length === 0){
+                    return;
+                } else {
+                    const question = responseJSON[0];
+                    setPoint(question.POINTS);
+                    setTemps(question.TEMPS);
+                    setTimer(question.TEMPS);
+                    setTypeQuestion(question.TYPE);
+
+                    if (question.TYPE != 'Ataraxienne'){
+                        setQuestion(question.QUESTION);
+                        const reponses = recup_reponse(question.REPONSES);
+                        setReponses(reponses);
+                    } else {
+                        atar(question.QUESTION);
+                    }
+                    setReponsesBinaire(question.REPONSES_BINAIRE);
+                    
+                    let img = '';
+                    //Image
+                    if (question.TYPE == 'Image'){
+                        img = question.IMG_SRC;
+                    }
+                    setImgSrc(img);
+                }
+            } else {
+                console.log("Retourne false via le serveur");
+            }
+        }).catch((error)=>{
+            console.log("Erreur : "+ error);
+    });
+
+    React.useEffect(
        () => {
             //Lors qu'on passe la question
         socket.on('pass-question', () => {
@@ -164,6 +240,7 @@ export const useQuiz = () => {
         isLoading,
         socket,
         waitMsg,
+        update,
         setWaitMsg,
         setIdUser,
         setIdGroupe,

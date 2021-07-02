@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View, Image, SafeAreaView, TouchableOpacity} from 'react-native';
 import {AuthContext} from "../context/authContext";
 import * as SecureStore from 'expo-secure-store';
-import {localhost} from '../../config/host';
+import {host} from '../../config/host';
 import { useQuizContext } from '../context/quizContext';
 
 function Accueil(props) {
@@ -18,7 +18,7 @@ function Accueil(props) {
                 try {
                     //Récupère le token en verificant sa validité
                     const token = await SecureStore.getItemAsync('token');
-                    fetch('http://'+localhost+':3000/auth/validate',{
+                    fetch('http://'+host+':3000/auth/validate',{
                         method:'POST',
                         headers: {
                             'Accept': 'application/json',
@@ -57,7 +57,7 @@ function Accueil(props) {
     
     //Appuie sur "Mode quiz"
     const pressQuiz = () => {
-        fetch(`http://`+localhost+`:3000/quiz/${idGroupe}`,{
+        fetch(`http://`+host+`:3000/quiz/${idGroupe}`,{
             method:'GET',
             headers: {
                 'Accept': 'application/json',

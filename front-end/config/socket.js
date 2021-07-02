@@ -1,6 +1,6 @@
 import io from 'socket.io-client';
-import {localhost} from './host';
+import {host} from './host';
     //Socket
-const socket = io('ws://' + localhost + ':3000/');
+const socket = io('ws://' + host + ':3000/');
 
 export {socket};
