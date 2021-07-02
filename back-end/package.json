@@ -1,0 +1,29 @@
+{
+  "name": "backataraxy",
+  "version": "1.0.0",
+  "description": "Back-end for ataraXy app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomx93/backataraxy.git"
+  },
+  "author": "Tom XIE",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tomx93/backataraxy/issues"
+  },
+  "homepage": "https://github.com/tomx93/backataraxy#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.2.5",
+    "nodemon": "^2.0.9",
+    "pg": "^8.6.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.6.4",
+    "socket.io": "^4.1.2"
+  }
+}
