@@ -10,4 +10,4 @@ Application mobile de quiz total synchrone pour ataraXy dédier aux étudiants d
 
 ## Description
 
-L'application n'est **pas fini**, je ne maintiens plus le projet.
+L'application n'est **pas fini**, je ne maintiens plus le projet. L'application fonctionne en local mais n'est pas encore disponible pour le public.
